@@ -1,6 +1,6 @@
-// ไฟล์: server.js
+// ไฟล์: server.js (Interactive Claude CLI via node-pty)
 // รันด้วยคำสั่ง: node server.js
-// เปิดเว็บ: http://localhost:3000
+// เปิดเว็บ: http://localhost:3003
 
 const express = require('express');
 const http = require('http');
@@ -8,6 +8,7 @@ const WebSocket = require('ws');
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const pty = require('node-pty');
 
 const app = express();
 const server = http.createServer(app);
@@ -47,7 +48,10 @@ wss.on('connection', (ws) => {
 
   ws.on('close', () => {
     for (const [id, session] of activeSessions) {
-      if (session.process) session.process.kill();
+      if (session.process) {
+        if (session.isPTY) session.process.kill();
+        else session.process.kill();
+      }
     }
   });
 });
@@ -70,12 +74,28 @@ function handleMessage(ws, data) {
     case 'write_file': handleWriteFile(ws, data, projectPath); break;
     case 'list_files': handleListFiles(ws, data, projectPath); break;
     case 'stop': handleStop(ws, data); break;
+    case 'pty_input': handlePTYInput(ws, data); break;
+    case 'pty_resize': handlePTYResize(ws, data); break;
     default: ws.send(JSON.stringify({ type: 'error', data: { message: `ไม่รู้จักคำสั่ง: ${data.type}` } }));
   }
 }
 
 function handleChat(ws, data, projectPath) {
   const sessionId = data.sessionId || 'default';
+  const session = activeSessions.get(sessionId);
+  
+  // If PTY session exists, send input to it
+  if (session && session.isPTY && session.process) {
+    session.process.write(data.message + '\r');
+    return;
+  }
+
+  // Start PTY mode if requested
+  if (data.mode === 'pty') {
+    return startPTY(ws, data, projectPath);
+  }
+
+  // Otherwise fallback to print mode
   if (activeSessions.has(sessionId)) {
     activeSessions.get(sessionId).process?.kill();
   }
@@ -109,7 +129,58 @@ function handleChat(ws, data, projectPath) {
     ws.send(JSON.stringify({ type: 'complete', data: { output: buffer, code, sessionId } }));
   });
 
-  activeSessions.set(sessionId, { process: proc, ws });
+  activeSessions.set(sessionId, { process: proc, ws, isPTY: false });
+}
+
+function startPTY(ws, data, projectPath) {
+  const sessionId = data.sessionId || 'default';
+  
+  if (activeSessions.has(sessionId)) {
+    const old = activeSessions.get(sessionId);
+    if (old.process) old.process.kill();
+  }
+
+  ws.send(JSON.stringify({ type: 'status', data: { status: 'starting', message: 'กำลังเปิด Claude Interactive...' } }));
+
+  const cliCmd = process.env.CLAUDE_CMD || 'claude';
+  const shell = process.platform === 'win32' ? 'powershell.exe' : process.env.SHELL || 'bash';
+  
+  // Start a shell and run claude inside it
+  const proc = pty.spawn(shell, ['-c', cliCmd], {
+    name: 'xterm-color',
+    cols: data.cols || 80,
+    rows: data.rows || 24,
+    cwd: projectPath,
+    env: { ...process.env, TERM: 'xterm-256color', FORCE_COLOR: '1' }
+  });
+
+  proc.onData(chunk => {
+    ws.send(JSON.stringify({ type: 'pty_output', data: { text: chunk, sessionId } }));
+  });
+
+  proc.onExit(({ exitCode, signal }) => {
+    activeSessions.delete(sessionId);
+    ws.send(JSON.stringify({ type: 'pty_exit', data: { code: exitCode, signal, sessionId } }));
+  });
+
+  activeSessions.set(sessionId, { process: proc, ws, isPTY: true });
+  ws.send(JSON.stringify({ type: 'pty_ready', data: { sessionId } }));
+}
+
+function handlePTYInput(ws, data) {
+  const sessionId = data.sessionId || 'default';
+  const session = activeSessions.get(sessionId);
+  if (session && session.isPTY && session.process) {
+    session.process.write(data.input);
+  }
+}
+
+function handlePTYResize(ws, data) {
+  const sessionId = data.sessionId || 'default';
+  const session = activeSessions.get(sessionId);
+  if (session && session.isPTY && session.process) {
+    session.process.resize(data.cols || 80, data.rows || 24);
+  }
 }
 
 function handleTerminal(ws, data, projectPath) {
