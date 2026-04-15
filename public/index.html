@@ -2,158 +2,571 @@
 <html lang="th">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Claude Code Web UI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css">
 <style>
-:root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--border:#2a2a3a;--text:#e8e8f0;--text2:#9898b0;--muted:#6a6a82;--purple:#8b5cf6;--blue:#3b82f6;--green:#10b981;--red:#ef4444;--orange:#f59e0b;--r:10px;--t:0.2s}
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:5px}
-.app{display:flex;height:100vh}.side{width:240px;min-width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:var(--t)}.side.collapsed{width:0;min-width:0;overflow:hidden;border:none}
-.sh{padding:16px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center}.logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--purple),#6366f1);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff}
-.st h1{font-size:14px;font-weight:700;background:linear-gradient(135deg,#c4b5fd,var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}.st span{font-size:10px;color:var(--muted)}
-.nav{flex:1;overflow-y:auto;padding:10px}.ns{margin-bottom:12px}.nst{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:6px 8px}
-.ni{display:flex;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;transition:var(--t);font-size:13px;color:var(--text2)}.ni:hover{background:var(--bg3);color:var(--text)}.ni.act{background:rgba(139,92,246,0.15);color:var(--purple)}
-.sf{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;font-size:11px}.ua{width:26px;height:26px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:10px;flex-shrink:0}
-.main{flex:1;display:flex;flex-direction:column;min-width:0}.tb{height:48px;min-height:48px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px}
-.tbtn{width:30px;height:30px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px}.tbtn:hover{background:var(--bg3);color:var(--text)}
-.ttit{flex:1;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}.tpath{color:var(--muted);font-weight:400;font-size:11px}
-.cstat{display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:600}.cstat.conn{background:rgba(16,185,129,0.15);color:var(--green)}.cstat.disc{background:rgba(239,68,68,0.15);color:var(--red)}.cstat.conn svg,.cstat.disc svg{width:8px;height:8px}
-.ta{display:flex;gap:6px}.tact{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit}.tact:hover{color:var(--text)}.tact.pri{background:linear-gradient(135deg,var(--purple),#6366f1);border-color:transparent;color:#fff}.tact.warn{background:var(--orange);border-color:transparent;color:#fff}
-.area{flex:1;display:flex;overflow:hidden;position:relative}.cp{flex:1;display:flex;flex-direction:column;min-width:0}.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
-.ws{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:30px;text-align:center}.wl{width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,var(--purple),#6366f1);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;margin-bottom:16px}
-.ws h2{font-size:20px;font-weight:700;margin-bottom:6px;background:linear-gradient(135deg,#e8e8f0,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.ws p{color:var(--muted);font-size:13px;margin-bottom:24px;max-width:400px;line-height:1.5}
-.qa{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;width:100%;max-width:440px}.qact{padding:12px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg2);cursor:pointer;transition:var(--t);text-align:left;font-family:inherit}
-.qact:hover{border-color:var(--purple);background:rgba(139,92,246,0.1);transform:translateY(-1px)}.qact .qi{font-size:18px;margin-bottom:6px}.qact .qt{font-size:12px;font-weight:600;margin-bottom:2px}.qact .qd{font-size:10px;color:var(--muted);line-height:1.3}
-.msg{display:flex;gap:10px;animation:fadeIn .3s ease}@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-.mav{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}.mav.claude{background:linear-gradient(135deg,var(--purple),#6366f1);color:#fff}.mav.user{background:var(--blue);color:#fff}.mav.sys{background:var(--bg3);color:var(--muted)}
-.mcon{flex:1;min-width:0}.mhdr{display:flex;align-items:center;gap:6px;margin-bottom:4px}.msen{font-size:11px;font-weight:600}.mtime{font-size:9px;color:var(--muted)}
-.mbody{font-size:12.5px;line-height:1.6;color:var(--text)} .mbody pre{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;margin:8px 0;overflow-x:auto}.mbody pre code{background:none;padding:0;color:var(--text);font-size:11px;line-height:1.5}
-.mbody code{font-family:'Courier New',monospace;background:var(--bg3);padding:1px 5px;border-radius:4px;font-size:11px;color:var(--purple)}
-.input{padding:12px 16px 16px;border-top:1px solid var(--border);background:var(--bg2)}
-.sug{display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;padding-bottom:4px}.sug::-webkit-scrollbar{height:0}.schip{padding:4px 10px;border-radius:16px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:10px;cursor:pointer;white-space:nowrap;transition:var(--t);font-family:inherit}
-.schip:hover{border-color:var(--purple);color:var(--purple)}
-.iwrap{display:flex;gap:8px;align-items:flex-end}.icon{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:4px;transition:var(--t);display:flex;flex-direction:column}
-.icon:focus-within{border-color:var(--purple);box-shadow:0 0 0 2px rgba(139,92,246,0.2)}
-.imode{display:flex;gap:4px;padding:3px 6px 0}.imb{padding:2px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);font-size:10px;cursor:pointer;transition:var(--t);font-family:inherit}
-.imb:hover{color:var(--text)}.imb.act{background:rgba(139,92,246,0.15);border-color:var(--purple);color:var(--purple)}
-.itxt{width:100%;background:none;border:none;outline:none;color:var(--text);font-family:inherit;font-size:13px;padding:8px 10px 6px;resize:none;min-height:38px;max-height:150px;line-height:1.4}
-.itxt::placeholder{color:var(--muted)}
-.sbtn{width:34px;height:34px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--purple),#6366f1);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--t);flex-shrink:0;font-size:16px}.sbtn:hover{transform:scale(1.05)}.sbtn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
-.rp{width:0;min-width:0;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:width 0.25s ease, min-width 0.25s ease;overflow:hidden}.rp.open{width:380px;min-width:380px}
-.rph{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600}
-.rcbtn{width:26px;height:26px;border-radius:6px;border:none;background:none;color:var(--muted);cursor:pointer;font-size:14px}
-.tarea{flex:1;padding:10px 14px;overflow-y:auto;font-family:'Courier New',monospace;font-size:11px;line-height:1.7}
-.tline{display:flex;gap:6px;margin-bottom:2px}.tp{color:var(--purple)}.tc{color:var(--text)}.tout{color:var(--text2)}.terr{color:var(--red)}.tsuc{color:var(--green)}.tinfo{color:var(--blue)}
-.til{display:flex;gap:6px;align-items:center;margin-top:4px}.tinp{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Courier New',monospace;font-size:11px}
-.sb{height:26px;background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:14px;font-size:10px;color:var(--muted)}
-.si{display:flex;align-items:center;gap:4px}.sdot{width:6px;height:6px;border-radius:50%;background:var(--green)}.sdot.red{background:var(--red)}.sdot.orange{background:var(--orange)}
-.sp{flex:1}
-.panel{display:none;flex:1;overflow-y:auto;padding:20px}.panel.vis{display:block}
-.sec{margin-bottom:24px}.sec h3{font-size:13px;font-weight:700;margin-bottom:12px}
-.row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:6px}
-.row.click{cursor:pointer}.row.click:hover{border-color:var(--purple);background:rgba(139,92,246,0.1)}
-.lbl{font-size:12px;font-weight:500}.lbl small{display:block;font-size:10px;color:var(--muted);font-weight:400;margin-top:1px}
-.tog{width:36px;height:18px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;position:relative;cursor:pointer;transition:var(--t)}.tog.act{background:var(--purple);border-color:var(--purple)}
-.tog::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:var(--t)}.tog.act::after{left:20px}
-.sel{padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:11px;font-family:inherit;outline:none}
-.ftree{padding:0 8px}.fitem{display:flex;align-items:center;gap:5px;padding:3px 6px;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:11px;color:var(--text2);transition:var(--t)}.fitem:hover{background:var(--bg3);color:var(--text)}.fitem.fold{color:var(--blue);font-weight:600}
-.fitem .ind{display:inline-block;width:14px}
-.notif{position:fixed;top:16px;right:16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;box-shadow:0 4px 16px rgba(0,0,0,0.5);z-index:100;display:flex;align-items:center;gap:8px;font-size:12px;transform:translateX(120%);transition:transform 0.25s ease;max-width:320px}.notif.show{transform:translateX(0)}
-.notif.suc{border-left:3px solid var(--green)}.notif.err{border-left:3px solid var(--red)}.notif.inf{border-left:3px solid var(--blue)}
-.typ{display:flex;gap:3px;padding:6px 0}.typ span{width:5px;height:5px;border-radius:50%;background:var(--purple);animation:ty 1.2s infinite}@keyframes ty{0%,60%,100%{opacity:0.3;transform:scale(0.8)}30%{opacity:1;transform:scale(1)}}
-.modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s}.modal.open{opacity:1;pointer-events:all}
-.mbox{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;max-width:480px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.5);transform:scale(0.95);transition:transform 0.2s}.modal.open .mbox{transform:scale(1)}
-.mbox h3{font-size:15px;font-weight:700;margin-bottom:8px}.mbox p{font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:12px}
-.mbox ul{font-size:11px;color:var(--text);padding-left:16px;margin-bottom:8px}.mbox li{margin-bottom:3px}.mbox code{background:var(--bg3);padding:1px 4px;border-radius:3px;color:var(--purple);font-family:'Courier New',monospace;font-size:10px}
-.mbtn{padding:6px 14px;border-radius:6px;border:none;background:var(--purple);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}.mbtn:hover{opacity:0.9}
-.pty-wrap{display:none;flex:1;flex-direction:column;background:var(--bg);padding:12px;overflow:hidden}.pty-wrap.vis{display:flex}
-.pty-term{flex:1;border-radius:8px;overflow:hidden;border:1px solid var(--border)}
-.pty-bar{display:flex;gap:8px;align-items:center;margin-bottom:10px}
-.xterm-viewport::-webkit-scrollbar{width:8px}.xterm-viewport::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
-@media(max-width:800px){.side{position:absolute;left:0;top:0;bottom:0;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.5)}.side.collapsed{width:0}.rp.open{position:absolute;right:0;top:0;bottom:0;width:100%;min-width:100%}.qa{grid-template-columns:1fr}}
+:root{
+  --color-bg:#0B0F19;
+  --color-surface:#111827;
+  --color-surface-elevated:#1F2937;
+  --color-border:#374151;
+  --color-border-subtle:#1F2937;
+  --color-text:#F9FAFB;
+  --color-text-secondary:#9CA3AF;
+  --color-text-muted:#6B7280;
+  --color-brand:#8B5CF6;
+  --color-brand-hover:#7C3AED;
+  --color-success:#22C55E;
+  --color-warning:#F59E0B;
+  --color-danger:#EF4444;
+  --color-info:#3B82F6;
+  --radius-sm:6px;
+  --radius-md:10px;
+  --radius-lg:14px;
+  --radius-xl:18px;
+  --transition-fast:120ms ease;
+  --transition-base:200ms ease;
+  --font-sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --sidebar-width:240px;
+  --sidebar-rail:64px;
+  --topbar-height:56px;
+  --bottom-nav-height:64px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden}
+body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--color-border);border-radius:3px}
+::-webkit-scrollbar-thumb:hover{background:var(--color-text-muted)}
+
+/* App layout */
+.app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+
+/* Topbar */
+.topbar{
+  height:var(--topbar-height);min-height:var(--topbar-height);
+  background:var(--color-surface);border-bottom:1px solid var(--color-border-subtle);
+  display:flex;align-items:center;justify-content:space-between;padding:0 12px;gap:12px;
+  position:relative;z-index:30
+}
+.topbar__left,.topbar__right{display:flex;align-items:center;gap:8px}
+.topbar__title{font-size:15px;font-weight:600;color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar__path{color:var(--color-text-muted);font-weight:400;font-size:12px;margin-left:6px}
+
+/* Status badge */
+.status-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:9999px;font-size:11px;font-weight:600;background:var(--color-surface-elevated);border:1px solid var(--color-border)}
+.status-badge--online{color:var(--color-success)}
+.status-badge--offline{color:var(--color-danger)}
+.status-badge--wait{color:var(--color-warning)}
+.status-badge__dot{width:6px;height:6px;border-radius:50%;background:currentColor}
+
+/* Layout */
+.layout{flex:1;display:flex;min-height:0;position:relative}
+
+/* Sidebar (desktop only) */
+.sidebar{
+  display:none;flex-direction:column;background:var(--color-surface);border-right:1px solid var(--color-border-subtle);
+  width:var(--sidebar-rail);min-width:var(--sidebar-rail);transition:width var(--transition-base),min-width var(--transition-base);
+  position:relative;z-index:20;overflow:hidden
+}
+.sidebar--expanded{width:var(--sidebar-width);min-width:var(--sidebar-width)}
+.sidebar__brand{height:var(--topbar-height);display:flex;align-items:center;padding:0 18px;gap:12px;border-bottom:1px solid var(--color-border-subtle);flex-shrink:0}
+.sidebar__logo{width:28px;height:28px;border-radius:var(--radius-sm);background:linear-gradient(135deg,var(--color-brand),#6366f1);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:14px;flex-shrink:0}
+.sidebar__brand-text{display:none;flex-direction:column}
+.sidebar--expanded .sidebar__brand-text{display:flex}
+.sidebar__brand-title{font-size:13px;font-weight:700;background:linear-gradient(135deg,#C4B5FD,var(--color-brand));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sidebar__brand-sub{font-size:10px;color:var(--color-text-muted)}
+.sidebar__nav{flex:1;overflow-y:auto;padding:10px 0;display:flex;flex-direction:column;gap:16px}
+.sidebar__section{display:flex;flex-direction:column;gap:2px;padding:0 10px}
+.sidebar__label{display:none;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.08em;color:var(--color-text-muted);padding:6px 10px}
+.sidebar--expanded .sidebar__label{display:block}
+.sidebar__item{display:flex;align-items:center;gap:14px;padding:10px 12px;border-radius:var(--radius-sm);color:var(--color-text-secondary);cursor:pointer;transition:background var(--transition-fast),color var(--transition-fast);white-space:nowrap}
+.sidebar__item:hover{background:var(--color-surface-elevated);color:var(--color-text)}
+.sidebar__item--active{background:rgba(139,92,246,0.12);color:var(--color-brand)}
+.sidebar__item-text{display:none;font-size:13px;font-weight:500}
+.sidebar--expanded .sidebar__item-text{display:block}
+.sidebar__footer{margin-top:auto;padding:12px;border-top:1px solid var(--color-border-subtle);display:flex;align-items:center;gap:10px}
+.sidebar__avatar{width:28px;height:28px;border-radius:50%;background:var(--color-info);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:11px;flex-shrink:0}
+.sidebar__user{display:none;flex-direction:column;overflow:hidden}
+.sidebar--expanded .sidebar__user{display:flex}
+.sidebar__user-name{font-size:12px;font-weight:600;color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sidebar__user-path{font-size:10px;color:var(--color-text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Main content */
+.main{flex:1;min-width:0;display:flex;flex-direction:column;position:relative;background:var(--color-bg)}
+
+/* Pages */
+.page{display:none;flex:1;flex-direction:column;min-height:0;position:relative}
+.page--active{display:flex}
+.page__header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--color-border-subtle);gap:12px}
+.page__title{font-size:16px;font-weight:600}
+.page__content{flex:1;overflow-y:auto;min-height:0}
+
+/* Chat page */
+.page-chat__messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
+.page-chat__input{padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));border-top:1px solid var(--color-border-subtle);background:var(--color-surface);display:flex;flex-direction:column;gap:10px}
+
+/* Welcome screen */
+.welcome{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:32px 24px;gap:16px;flex:1}
+.welcome__logo{width:64px;height:64px;border-radius:var(--radius-lg);background:linear-gradient(135deg,var(--color-brand),#6366f1);display:flex;align-items:center;justify-content:center;color:#fff;font-size:28px;font-weight:800}
+.welcome__title{font-size:22px;font-weight:700}
+.welcome__desc{color:var(--color-text-secondary);font-size:13px;max-width:360px;line-height:1.6}
+.welcome__actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;width:100%;max-width:400px}
+.welcome__btn{padding:14px;border-radius:var(--radius-md);border:1px solid var(--color-border);background:var(--color-surface);cursor:pointer;transition:border-color var(--transition-fast),background var(--transition-fast);text-align:left;display:flex;flex-direction:column;gap:4px}
+.welcome__btn:hover{border-color:var(--color-brand);background:rgba(139,92,246,0.08)}
+.welcome__btn-title{font-size:13px;font-weight:600;color:var(--color-text)}
+.welcome__btn-desc{font-size:11px;color:var(--color-text-muted);line-height:1.4}
+
+/* Messages */
+.message{display:flex;gap:12px;animation:fadeIn .2s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.message--user{flex-direction:row-reverse}
+.message__avatar{width:28px;height:28px;border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;flex-shrink:0}
+.message__avatar--claude{background:linear-gradient(135deg,var(--color-brand),#6366f1);color:#fff}
+.message__avatar--user{background:var(--color-info);color:#fff}
+.message__avatar--sys{background:var(--color-surface-elevated);color:var(--color-text-muted)}
+.message__content{max-width:85%;display:flex;flex-direction:column;gap:4px}
+@media(min-width:768px){.message__content{max-width:72%}}
+.message__header{display:flex;align-items:center;gap:8px}
+.message--user .message__header{flex-direction:row-reverse}
+.message__sender{font-size:11px;font-weight:600;color:var(--color-text)}
+.message__time{font-size:10px;color:var(--color-text-muted)}
+.message__body{font-size:13px;line-height:1.65;color:var(--color-text);background:var(--color-surface-elevated);padding:10px 14px;border-radius:var(--radius-md);border:1px solid var(--color-border-subtle)}
+.message--user .message__body{background:rgba(139,92,246,0.12);border-color:rgba(139,92,246,0.25);color:var(--color-text)}
+.message__body pre{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:10px;margin:8px 0;overflow-x:auto}
+.message__body pre code{background:none;padding:0;color:var(--color-text);font-size:12px;line-height:1.5}
+.message__body code{font-family:'SF Mono',Monaco,'Courier New',monospace;background:var(--color-bg);padding:2px 5px;border-radius:4px;font-size:12px;color:var(--color-brand)}
+
+/* Input bar */
+.input-bar{display:flex;gap:10px;align-items:flex-end}
+.input-bar__field{flex:1;background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:4px;display:flex;flex-direction:column;gap:2px;transition:border-color var(--transition-fast),box-shadow var(--transition-fast)}
+.input-bar__field:focus-within{border-color:var(--color-brand);box-shadow:0 0 0 3px rgba(139,92,246,0.15)}
+.input-bar__modes{display:flex;gap:4px;padding:2px 6px 0}
+.input-bar__mode{padding:3px 10px;border-radius:var(--radius-sm);border:1px solid transparent;background:transparent;color:var(--color-text-muted);font-size:11px;cursor:pointer;transition:all var(--transition-fast)}
+.input-bar__mode:hover{color:var(--color-text)}
+.input-bar__mode--active{background:rgba(139,92,246,0.12);color:var(--color-brand);border-color:rgba(139,92,246,0.3)}
+.input-bar__textarea{width:100%;background:none;border:none;outline:none;color:var(--color-text);font-family:inherit;font-size:14px;padding:8px 10px 6px;resize:none;min-height:44px;max-height:140px;line-height:1.5}
+.input-bar__textarea::placeholder{color:var(--color-text-muted)}
+
+/* Chips */
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px}
+.chips::-webkit-scrollbar{height:0}
+.chip{padding:5px 12px;border-radius:9999px;border:1px solid var(--color-border);background:var(--color-bg);color:var(--color-text-muted);font-size:11px;cursor:pointer;white-space:nowrap;transition:border-color var(--transition-fast),color var(--transition-fast)}
+.chip:hover{border-color:var(--color-brand);color:var(--color-brand)}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:var(--radius-sm);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;transition:all var(--transition-fast);white-space:nowrap}
+.btn:disabled{opacity:0.45;cursor:not-allowed}
+.btn--primary{background:var(--color-brand);color:#fff;padding:8px 14px}
+.btn--primary:hover{background:var(--color-brand-hover)}
+.btn--secondary{background:var(--color-surface-elevated);color:var(--color-text);border:1px solid var(--color-border);padding:8px 14px}
+.btn--secondary:hover{background:var(--color-border);border-color:var(--color-border)}
+.btn--danger{background:var(--color-danger);color:#fff;padding:8px 14px}
+.btn--ghost{color:var(--color-text-secondary);background:transparent;padding:8px}
+.btn--ghost:hover{color:var(--color-text);background:var(--color-surface-elevated)}
+.btn--icon{width:40px;height:40px;padding:0;border-radius:var(--radius-sm);color:var(--color-text-secondary);background:var(--color-surface-elevated);border:1px solid var(--color-border)}
+.btn--icon:hover{color:var(--color-text);background:var(--color-border)}
+.btn--icon-sm{width:36px;height:36px}
+
+/* Icon SVG helper */
+.icon{width:20px;height:20px;fill:currentColor;flex-shrink:0}
+.icon--sm{width:16px;height:16px}
+.icon--lg{width:24px;height:24px}
+
+/* Right panel */
+.right-panel{
+  position:fixed;inset:var(--topbar-height) 0 0 auto;width:100%;max-width:420px;
+  background:var(--color-surface);border-left:1px solid var(--color-border-subtle);
+  display:none;flex-direction:column;z-index:40;transform:translateX(100%);transition:transform var(--transition-base)
+}
+.right-panel--open{display:flex;transform:translateX(0)}
+@media(min-width:1280px){.right-panel{position:relative;inset:auto;width:380px;max-width:380px;transform:none;display:none}.right-panel--open{display:flex}}
+
+.right-panel__header{height:var(--topbar-height);display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid var(--color-border-subtle)}
+.right-panel__title{font-size:14px;font-weight:600}
+.right-panel__content{flex:1;overflow-y:auto;padding:12px 14px;font-family:'SF Mono',Monaco,'Courier New',monospace;font-size:12px;line-height:1.7}
+.right-panel__input{display:flex;align-items:center;gap:8px;padding:10px 14px;border-top:1px solid var(--color-border-subtle)}
+.right-panel__input-field{flex:1;background:none;border:none;outline:none;color:var(--color-text);font-family:'SF Mono',Monaco,'Courier New',monospace;font-size:12px}
+
+/* Bottom nav (mobile) */
+.bottom-nav{
+  display:flex;height:var(--bottom-nav-height);min-height:var(--bottom-nav-height);
+  background:var(--color-surface);border-top:1px solid var(--color-border-subtle);
+  padding-bottom:env(safe-area-inset-bottom,0px);position:relative;z-index:25
+}
+.bottom-nav__item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;color:var(--color-text-muted);cursor:pointer;transition:color var(--transition-fast);min-width:0}
+.bottom-nav__item:hover{color:var(--color-text)}
+.bottom-nav__item--active{color:var(--color-brand);background:rgba(139,92,246,0.08)}
+.bottom-nav__label{font-size:10px;font-weight:500}
+
+/* Drawer overlay */
+.drawer-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(3px);z-index:35;
+  opacity:0;pointer-events:none;transition:opacity var(--transition-base)
+}
+.drawer-overlay--open{opacity:1;pointer-events:all}
+
+/* Files page */
+.page-files__content,.page-settings__content,.page-terminal__content{padding:16px}
+.file-tree{display:flex;flex-direction:column;gap:2px}
+.file-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-sm);cursor:pointer;color:var(--color-text-secondary);font-family:'SF Mono',Monaco,'Courier New',monospace;font-size:12px;transition:background var(--transition-fast),color var(--transition-fast)}
+.file-item:hover{background:var(--color-surface-elevated);color:var(--color-text)}
+.file-item--folder{color:var(--color-info);font-weight:600}
+.file-item__ind{display:inline-block;width:16px;text-align:center;flex-shrink:0}
+
+/* Terminal page */
+.terminal-box{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:14px;font-family:'SF Mono',Monaco,'Courier New',monospace;font-size:12px;line-height:1.7;min-height:200px}
+.terminal-line{display:flex;gap:8px;margin-bottom:3px}
+.terminal-prompt{color:var(--color-brand)}
+.terminal-out{color:var(--color-text-secondary)}
+.terminal-err{color:var(--color-danger)}
+.terminal-suc{color:var(--color-success)}
+.terminal-input-wrap{display:flex;gap:8px;margin-top:10px;align-items:center}
+.terminal-input{flex:1;background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:8px 12px;color:var(--color-text);font-family:'SF Mono',Monaco,'Courier New',monospace;font-size:12px;outline:none}
+.terminal-input:focus{border-color:var(--color-brand)}
+
+/* PTY page */
+.page-pty__content{flex:1;display:flex;flex-direction:column;padding:12px;gap:10px;overflow:hidden}
+.pty-toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.pty-container{flex:1;border:1px solid var(--color-border);border-radius:var(--radius-md);overflow:hidden;background:#000}
+
+/* Settings page */
+.setting-row{display:flex;flex-direction:column;gap:8px;padding:14px;background:var(--color-surface);border:1px solid var(--color-border-subtle);border-radius:var(--radius-md);margin-bottom:10px}
+@media(min-width:768px){.setting-row{flex-direction:row;align-items:center;justify-content:space-between}}
+.setting-label{font-size:13px;font-weight:500}
+.setting-label small{display:block;font-size:11px;color:var(--color-text-muted);font-weight:400;margin-top:2px}
+.setting-input{padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--color-border);background:var(--color-bg);color:var(--color-text);font-size:13px;outline:none;min-width:180px}
+.setting-input:focus{border-color:var(--color-brand)}
+
+/* Modal */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.65);backdrop-filter:blur(4px);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity var(--transition-base);padding:16px}
+.modal--open{opacity:1;pointer-events:all}
+.modal__box{background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-lg);padding:20px;max-width:480px;width:100%;box-shadow:0 20px 50px rgba(0,0,0,0.5);transform:scale(0.97);transition:transform var(--transition-base)}
+.modal--open .modal__box{transform:scale(1)}
+.modal__title{font-size:16px;font-weight:700;margin-bottom:6px}
+.modal__text{font-size:13px;color:var(--color-text-secondary);line-height:1.6;margin-bottom:14px}
+.modal__list{font-size:12px;color:var(--color-text);padding-left:18px;margin-bottom:10px}
+.modal__list li{margin-bottom:4px}
+.modal__list code{background:var(--color-bg);padding:2px 5px;border-radius:4px;color:var(--color-brand);font-family:'SF Mono',Monaco,'Courier New',monospace;font-size:11px}
+.modal__footer{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+
+/* Toast / Notification */
+.notif{position:fixed;top:14px;right:14px;background:var(--color-surface);border:1px solid var(--color-border);border-radius:var(--radius-md);padding:12px 16px;box-shadow:0 10px 30px rgba(0,0,0,0.4);z-index:110;display:flex;align-items:center;gap:10px;font-size:13px;transform:translateX(130%);transition:transform var(--transition-base);max-width:320px}
+.notif--show{transform:translateX(0)}
+.notif--suc{border-left:3px solid var(--color-success)}
+.notif--err{border-left:3px solid var(--color-danger)}
+.notif--inf{border-left:3px solid var(--color-info)}
+
+/* Typing indicator */
+.typing{display:flex;gap:3px;padding:6px 0}
+.typing span{width:5px;height:5px;border-radius:50%;background:var(--color-brand);animation:ty 1.2s infinite}
+.typing span:nth-child(2){animation-delay:.2s}
+.typing span:nth-child(3){animation-delay:.4s}
+@keyframes ty{0%,60%,100%{opacity:0.3;transform:scale(0.8)}30%{opacity:1;transform:scale(1)}}
+
+/* Status bar */
+.statusbar{height:28px;background:var(--color-surface);border-top:1px solid var(--color-border-subtle);display:none;align-items:center;padding:0 14px;gap:16px;font-size:11px;color:var(--color-text-muted)}
+@media(min-width:768px){.statusbar{display:flex}}
+.statusbar__item{display:flex;align-items:center;gap:5px}
+.statusbar__dot{width:5px;height:5px;border-radius:50%;background:var(--color-success)}
+.statusbar__dot--red{background:var(--color-danger)}
+.statusbar__dot--orange{background:var(--color-warning)}
+.statusbar__spacer{flex:1}
+
+/* Responsive visibility */
+@media(min-width:768px){
+  .sidebar{display:flex}
+  .bottom-nav{display:none}
+  .topbar{padding:0 16px}
+  .topbar__title{font-size:16px}
+}
+@media(min-width:1024px){
+  .right-panel{display:none}
+  .right-panel--open{display:flex}
+}
 </style>
 </head>
 <body>
+
 <div class="app">
-<aside class="side" id="sidebar">
-<div class="sh"><div class="logo">C</div><div class="st"><h1>Claude Code</h1><span>Real CLI Integration</span></div></div>
-<nav class="nav">
-<div class="ns"><div class="nst">เมนูหลัก</div><div class="ni act" data-v="chat" onclick="switchV('chat',this)">💬 แชทกับ Claude</div><div class="ni" data-v="files" onclick="switchV('files',this)">📂 ไฟล์โปรเจกต์</div><div class="ni" data-v="term" onclick="switchV('term',this)">💻 เทอร์มินัล</div><div class="ni" data-v="pty" onclick="switchV('pty',this)">🤖 Claude Interactive</div></div>
-<div class="ns"><div class="nst">ตั้งค่า</div><div class="ni" data-v="set" onclick="switchV('set',this)">⚙️ ตั้งค่า</div><div class="ni" onclick="showModal('help')">❓ ช่วยเหลือ</div></div>
-</nav>
-<div class="sf"><div class="ua">U</div><div><div id="pName" style="font-weight:600">กำลังโหลด...</div><div id="pPath" style="font-size:9px;color:var(--muted)">...</div></div></div>
-</aside>
+  <!-- Topbar -->
+  <header class="topbar">
+    <div class="topbar__left">
+      <button class="btn btn--icon btn--icon-sm" id="menuBtn" aria-label="Toggle menu">
+        <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z" clip-rule="evenodd"/></svg>
+      </button>
+      <div class="topbar__title">
+        Claude Code
+        <span class="topbar__path" id="tPath">/project</span>
+      </div>
+    </div>
+    <div class="topbar__right">
+      <div class="status-badge status-badge--offline" id="cStat">
+        <span class="status-badge__dot"></span>
+        <span>Offline</span>
+      </div>
+      <button class="btn btn--primary" onclick="newChat()">
+        <svg class="icon icon--sm" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"/></svg>
+        <span class="hide-sm">New Chat</span>
+      </button>
+    </div>
+  </header>
 
-<main class="main">
-<div class="tb">
-<button class="tbtn" onclick="toggleS()">☰</button>
-<div class="ttit"><span>Claude Code</span><span class="tpath" id="tPath">/project</span></div>
-<div class="cstat disc" id="cStat"><svg viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="4"/></svg><span>ไม่ได้เชื่อมต่อ</span></div>
-<div class="ta">
-  <button class="tact pri" id="ptyBtn" onclick="togglePTY()">🤖 เปิด Claude Interactive</button>
-  <button class="tact" onclick="toggleR()">💻 เทอร์มินัล</button>
-  <button class="tact pri" onclick="newChat()">✚ แชทใหม่</button>
-</div>
-</div>
+  <!-- Layout -->
+  <div class="layout">
+    <!-- Sidebar (desktop) -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar__brand">
+        <div class="sidebar__logo">C</div>
+        <div class="sidebar__brand-text">
+          <div class="sidebar__brand-title">Claude Code</div>
+          <div class="sidebar__brand-sub">Web UI</div>
+        </div>
+      </div>
+      <nav class="sidebar__nav">
+        <div class="sidebar__section">
+          <div class="sidebar__label">Menu</div>
+          <div class="sidebar__item sidebar__item--active" data-v="chat" onclick="switchV('chat',this)">
+            <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4.804 21.644A6.707 6.707 0 0 0 6 21.75a6.721 6.721 0 0 0 3.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 0 1-.814 1.686.75.75 0 0 0 .44 1.223ZM8.25 10.875a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25ZM10.875 12a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875-1.125a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25Z" clip-rule="evenodd"/></svg>
+            <span class="sidebar__item-text">Chat</span>
+          </div>
+          <div class="sidebar__item" data-v="files" onclick="switchV('files',this)">
+            <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M19.5 21a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3h-5.379a.75.75 0 0 1-.53-.22L11.47 3.66A2.25 2.25 0 0 0 9.879 3H4.5a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h15Zm-6.75-10.5a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25v2.25a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V10.5Z" clip-rule="evenodd"/></svg>
+            <span class="sidebar__item-text">Files</span>
+          </div>
+          <div class="sidebar__item" data-v="term" onclick="switchV('term',this)">
+            <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2.25 6a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V6Zm3.97.97a.75.75 0 0 1 1.06 0l2.25 2.25a.75.75 0 0 1 0 1.06l-2.25 2.25a.75.75 0 0 1-1.06-1.06l1.72-1.72-1.72-1.72a.75.75 0 0 1 0-1.06Zm4.28 4.28a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" clip-rule="evenodd"/></svg>
+            <span class="sidebar__item-text">Terminal</span>
+          </div>
+          <div class="sidebar__item" data-v="pty" onclick="switchV('pty',this)">
+            <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2.25 5.25a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3V15a3 3 0 0 1-3 3h-3v.257c0 .597.237 1.17.659 1.591l.621.622a.75.75 0 0 1-.53 1.28h-9a.75.75 0 0 1-.53-1.28l.621-.622a2.25 2.25 0 0 0 .659-1.591V18h-3a3 3 0 0 1-3-3V5.25Zm1.5 0v9.75a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V5.25a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5Z" clip-rule="evenodd"/></svg>
+            <span class="sidebar__item-text">Interactive</span>
+          </div>
+        </div>
+        <div class="sidebar__section">
+          <div class="sidebar__label">System</div>
+          <div class="sidebar__item" data-v="set" onclick="switchV('set',this)">
+            <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 0 0-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 0 0-2.282.819l-.922 1.597a1.875 1.875 0 0 0 .432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 0 0 0 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 0 0-.432 2.385l.922 1.597a1.875 1.875 0 0 0 2.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.182.088.277.228.297.35l.178 1.071c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.114-.26.297-.349.344-.165.673-.356.985-.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 0 0 2.28-.819l.923-1.597a1.875 1.875 0 0 0-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 0 0 0-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 0 0-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 0 0-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 0 0-1.85-1.567h-1.843ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" clip-rule="evenodd"/></svg>
+            <span class="sidebar__item-text">Settings</span>
+          </div>
+          <div class="sidebar__item" onclick="showModal('help')">
+            <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm11.378-3.917c-.89-.777-2.366-.791-3.285-.032-.839.69-1.094 1.797-.621 2.757.248.52.777 1.012 1.47 1.394.671.369 1.067.927 1.167 1.584l.003.143a.75.75 0 0 1-1.5 0l-.003-.133a.855.855 0 0 0-.553-.75c-.846-.369-1.69-.99-2.152-1.96-.778-1.633-.392-3.61 1.012-4.767 1.484-1.223 3.75-1.2 5.215.053.993.839 1.457 2.067 1.28 3.276-.148.992-.794 1.89-1.725 2.407a.75.75 0 0 1 .75 1.298c-1.237.714-2.64 1.143-4.055 1.239a.75.75 0 0 1-.09-1.497c1.147-.081 2.271-.406 3.283-.946.68-.372 1.154-1.03 1.254-1.805.12-.848-.186-1.687-.816-2.22ZM12 18a.75.75 0 1 0 0 1.5.75.75 0 0 0 0-1.5Z" clip-rule="evenodd"/></svg>
+            <span class="sidebar__item-text">Help</span>
+          </div>
+        </div>
+      </nav>
+      <div class="sidebar__footer">
+        <div class="sidebar__avatar">U</div>
+        <div class="sidebar__user">
+          <div class="sidebar__user-name" id="pName">Loading...</div>
+          <div class="sidebar__user-path" id="pPath">...</div>
+        </div>
+      </div>
+    </aside>
 
-<div class="area">
-<div class="cp" id="chatP">
-<div class="msgs" id="msgs">
-<div class="ws" id="ws">
-<div class="wl">C</div>
-<h2>Claude Code Web UI</h2>
-<p>เชื่อมต่อกับ Claude CLI จริงบนเครื่องของคุณ สามารถอ่าน/เขียนไฟล์ รันคำสั่ง และใช้ Skills ได้ทั้งหมด</p>
-<div class="qa">
-<button class="qact" onclick="send('สร้าง React component ปุ่ม Login')"><div class="qi">🚀</div><div class="qt">สร้าง Component</div><div class="qd">Claude สร้างไฟล์จริงในโปรเจกต์</div></button>
-<button class="qact" onclick="send('อ่าน package.json แล้วสรุป dependencies')"><div class="qi">📖</div><div class="qt">อ่านไฟล์</div><div class="qd">Claude อ่านและวิเคราะห์โค้ดจริง</div></button>
-<button class="qact" onclick="send('ช่วยหาบั๊กในโปรเจกต์นี้')"><div class="qi">🔍</div><div class="qt">วิเคราะห์โค้ด</div><div class="qd">ตรวจสอบข้อผิดพลาดจริง</div></button>
-<button class="qact" onclick="send('รัน npm install แล้วบอกผลลัพธ์')"><div class="qi">📦</div><div class="qt">รันคำสั่ง</div><div class="qd">Claude รัน Terminal จริง</div></button>
-</div>
-</div>
-</div>
+    <!-- Main -->
+    <main class="main">
+      <!-- Chat Page -->
+      <section class="page page-chat page--active" id="page-chat">
+        <div class="page-chat__messages" id="msgs">
+          <div class="welcome" id="ws">
+            <div class="welcome__logo">C</div>
+            <div class="welcome__title">Claude Code Web UI</div>
+            <div class="welcome__desc">Connect to Claude CLI on your machine. Read/write files, run commands, and use all Skills through the web.</div>
+            <div class="welcome__actions">
+              <button class="welcome__btn" onclick="send('Create a React login button component')">
+                <span class="welcome__btn-title">Create Component</span>
+                <span class="welcome__btn-desc">Claude creates real project files</span>
+              </button>
+              <button class="welcome__btn" onclick="send('Read package.json and summarize dependencies')">
+                <span class="welcome__btn-title">Read Files</span>
+                <span class="welcome__btn-desc">Claude reads and analyzes real code</span>
+              </button>
+              <button class="welcome__btn" onclick="send('Help find bugs in this project')">
+                <span class="welcome__btn-title">Analyze Code</span>
+                <span class="welcome__btn-desc">Inspect for real errors</span>
+              </button>
+              <button class="welcome__btn" onclick="send('Run npm install and show the result')">
+                <span class="welcome__btn-title">Run Commands</span>
+                <span class="welcome__btn-desc">Claude runs real terminal commands</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="page-chat__input">
+          <div class="chips">
+            <button class="chip" onclick="send('/read package.json')">Read package.json</button>
+            <button class="chip" onclick="send('/run git status')">Git status</button>
+            <button class="chip" onclick="send('/run ls -la')">List files</button>
+            <button class="chip" onclick="send('/clear')">Clear chat</button>
+          </div>
+          <div class="input-bar">
+            <div class="input-bar__field">
+              <div class="input-bar__modes">
+                <button class="input-bar__mode input-bar__mode--active" id="modeChat" onclick="setMode('chat')">Chat</button>
+                <button class="input-bar__mode" id="modeCode" onclick="setMode('code')">Code</button>
+              </div>
+              <textarea class="input-bar__textarea" id="inp" placeholder="Type a message or use /help for slash commands..." rows="1" onkeydown="hKey(event)" oninput="autoR(this)"></textarea>
+            </div>
+            <button class="btn btn--icon" id="sBtn" onclick="doSend()" aria-label="Send">
+              <svg class="icon icon--lg" viewBox="0 0 24 24"><path d="M3.478 2.404a.75.75 0 0 0-.926.941l2.432 7.905H13.5a.75.75 0 0 1 0 1.5H4.984l-2.432 7.905a.75.75 0 0 0 .926.94 60.519 60.519 0 0 0 18.445-8.986.75.75 0 0 0 0-1.218A60.517 60.517 0 0 0 3.478 2.404Z"/></svg>
+            </button>
+            <button class="btn btn--danger" id="xBtn" onclick="stopProc()" style="display:none;width:40px;height:40px;padding:0;border-radius:10px" aria-label="Stop">
+              <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4.5 7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z" clip-rule="evenodd"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
 
-<div class="input">
-<div class="sug">
-<button class="schip" onclick="send('/read package.json')">📖 อ่านไฟล์</button>
-<button class="schip" onclick="send('/run git status')">🌿 Git Status</button>
-<button class="schip" onclick="send('/run ls -la')">📁 รายการไฟล์</button>
-<button class="schip" onclick="send('/clear')">🧹 ล้างแชท</button>
-</div>
-<div class="iwrap">
-<div class="icon">
-<div class="imode"><button class="imb act" id="modeChat" onclick="setMode('chat')">💬 แชท</button><button class="imb" id="modeCode" onclick="setMode('code')">💻 โค้ด</button></div>
-<textarea class="itxt" id="inp" placeholder="พิมพ์คำสั่ง หรือพิมพ์ /help เพื่อดูคำสั่ง Slash..." rows="1" onkeydown="hKey(event)" oninput="autoR(this)"></textarea>
-</div>
-<button class="sbtn" id="sBtn" onclick="doSend()">➤</button>
-<button class="sbtn" id="xBtn" onclick="stopProc()" style="display:none;background:var(--red)">⏹</button>
-</div>
-</div>
-</div>
+      <!-- PTY Page -->
+      <section class="page page-pty" id="page-pty">
+        <div class="page-pty__content">
+          <div class="pty-toolbar">
+            <button class="btn btn--primary" onclick="startPTY()">
+              <svg class="icon icon--sm" viewBox="0 0 24 24"><path d="M4.5 5.653c0-1.426 1.529-2.33 2.779-1.643l11.54 6.348c1.295.712 1.295 2.573 0 3.285L7.28 19.991c-1.25.687-2.779-.217-2.779-1.643V5.653Z"/></svg>
+              Start Interactive
+            </button>
+            <button class="btn btn--danger" onclick="stopPTY()">
+              <svg class="icon icon--sm" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4.5 7.5a3 3 0 0 1 3-3h9a3 3 0 0 1 3 3v9a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-9Z" clip-rule="evenodd"/></svg>
+              Stop
+            </button>
+            <span style="font-size:12px;color:var(--color-text-muted)">Real xterm.js terminal connected to Claude CLI</span>
+          </div>
+          <div class="pty-container" id="ptyTerm"></div>
+        </div>
+      </section>
 
-<div class="pty-wrap" id="ptyP">
-  <div class="pty-bar">
-    <button class="tact pri" onclick="startPTY()">▶ เริ่ม Claude Interactive</button>
-    <button class="tact warn" onclick="stopPTY()">⏹ หยุด</button>
-    <span style="font-size:11px;color:var(--muted)">ใช้ xterm.js แสดงผล TUI จริงของ Claude CLI</span>
+      <!-- Files Page -->
+      <section class="page page-files" id="page-files">
+        <div class="page__header">
+          <div class="page__title">Project Files</div>
+          <button class="btn btn--secondary" onclick="loadFiles()">
+            <svg class="icon icon--sm" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4.755 10.059a7.5 7.5 0 0 1 12.548-3.364l1.903 1.903h-3.183a.75.75 0 1 0 0 1.5h4.992a.75.75 0 0 0 .75-.75V4.356a.75.75 0 0 0-1.5 0v3.18l-1.9-1.9A9 9 0 0 0 3.306 9.67c.09.281.261.38.53.316.27-.064.45-.227.45-.53v-.397ZM2.25 12a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H3a.75.75 0 0 1-.75-.75V12Zm6 0a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75V12Zm6 0a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75V12Zm-9.75 3a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H3a.75.75 0 0 1-.75-.75v-.008Zm6 0a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v-.008Zm6 0a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008ZM4.755 13.941a7.5 7.5 0 0 0 12.548 3.364l1.903-1.903h-3.183a.75.75 0 1 1 0-1.5h4.992a.75.75 0 0 1 .75.75v4.992a.75.75 0 0 1-1.5 0v-3.18l-1.9 1.9A9 9 0 0 1 3.306 14.33c-.09-.281-.261-.38-.53-.316-.27.064-.45.227-.45.53v.397Z" clip-rule="evenodd"/></svg>
+            Refresh
+          </button>
+        </div>
+        <div class="page-files__content">
+          <div style="margin-bottom:10px;font-size:12px;color:var(--color-text-muted)" id="fCount">Loading...</div>
+          <div class="file-tree" id="ftree"></div>
+        </div>
+      </section>
+
+      <!-- Terminal Page -->
+      <section class="page page-terminal" id="page-terminal">
+        <div class="page__header"><div class="page__title">Terminal</div></div>
+        <div class="page-terminal__content">
+          <div class="terminal-box" id="termC">
+            <div class="terminal-line"><span class="terminal-prompt">$</span><span class="terminal-suc">Terminal ready (runs on host machine)</span></div>
+            <div id="tLines"></div>
+          </div>
+          <div class="terminal-input-wrap">
+            <input type="text" class="terminal-input" id="tInp" placeholder="Type shell command..." onkeydown="if(event.key==='Enter')runT()">
+            <button class="btn btn--primary" onclick="runT()">Run</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Settings Page -->
+      <section class="page page-settings" id="page-settings">
+        <div class="page__header"><div class="page__title">Settings</div></div>
+        <div class="page-settings__content">
+          <div class="setting-row">
+            <div class="setting-label">Claude CLI Path <small>Path to the claude command</small></div>
+            <input type="text" class="setting-input" id="cPath" value="claude" style="max-width:200px">
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">Project Path <small>Working directory for Claude</small></div>
+            <input type="text" class="setting-input" id="projP" value="" style="max-width:320px">
+          </div>
+          <div class="setting-row" style="cursor:pointer" onclick="reconnect()">
+            <div class="setting-label" style="color:var(--color-brand)">Reconnect <small>Refresh WebSocket connection to server</small></div>
+            <svg class="icon icon--lg" style="color:var(--color-brand)" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4.755 10.059a7.5 7.5 0 0 1 12.548-3.364l1.903 1.903h-3.183a.75.75 0 1 0 0 1.5h4.992a.75.75 0 0 0 .75-.75V4.356a.75.75 0 0 0-1.5 0v3.18l-1.9-1.9A9 9 0 0 0 3.306 9.67c.09.281.261.38.53.316.27-.064.45-.227.45-.53v-.397ZM2.25 12a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H3a.75.75 0 0 1-.75-.75V12Zm6 0a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75V12Zm6 0a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75V12Zm-9.75 3a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H3a.75.75 0 0 1-.75-.75v-.008Zm6 0a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v-.008Zm6 0a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008ZM4.755 13.941a7.5 7.5 0 0 0 12.548 3.364l1.903-1.903h-3.183a.75.75 0 1 1 0-1.5h4.992a.75.75 0 0 1 .75.75v4.992a.75.75 0 0 1-1.5 0v-3.18l-1.9 1.9A9 9 0 0 1 3.306 14.33c-.09-.281-.261-.38-.53-.316-.27.064-.45.227-.45.53v.397Z" clip-rule="evenodd"/></svg>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Right Panel (Terminal side panel) -->
+    <aside class="right-panel" id="rightP">
+      <div class="right-panel__header">
+        <span>Terminal</span>
+        <button class="btn btn--ghost btn--icon-sm" onclick="toggleR()" aria-label="Close panel">
+          <svg class="icon" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/></svg>
+        </button>
+      </div>
+      <div class="right-panel__content" id="rpT">
+        <div class="terminal-line"><span class="terminal-prompt">&gt;</span><span class="terminal-suc">Terminal connected to host</span></div>
+        <div id="rpL"></div>
+      </div>
+      <div class="right-panel__input">
+        <span class="terminal-prompt">&gt;</span>
+        <input type="text" class="right-panel__input-field" id="rpInp" placeholder="Type command..." onkeydown="if(event.key==='Enter')runRpT()">
+      </div>
+    </aside>
   </div>
-  <div class="pty-term" id="ptyTerm"></div>
+
+  <!-- Bottom Nav (mobile) -->
+  <nav class="bottom-nav" id="bottomNav">
+    <div class="bottom-nav__item bottom-nav__item--active" data-v="chat" onclick="switchV('chat',this)">
+      <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4.804 21.644A6.707 6.707 0 0 0 6 21.75a6.721 6.721 0 0 0 3.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 0 1-.814 1.686.75.75 0 0 0 .44 1.223ZM8.25 10.875a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25ZM10.875 12a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875-1.125a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25Z" clip-rule="evenodd"/></svg>
+      <span class="bottom-nav__label">Chat</span>
+    </div>
+    <div class="bottom-nav__item" data-v="files" onclick="switchV('files',this)">
+      <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M19.5 21a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3h-5.379a.75.75 0 0 1-.53-.22L11.47 3.66A2.25 2.25 0 0 0 9.879 3H4.5a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h15Zm-6.75-10.5a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25v2.25a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V10.5Z" clip-rule="evenodd"/></svg>
+      <span class="bottom-nav__label">Files</span>
+    </div>
+    <div class="bottom-nav__item" data-v="term" onclick="switchV('term',this)">
+      <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2.25 6a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V6Zm3.97.97a.75.75 0 0 1 1.06 0l2.25 2.25a.75.75 0 0 1 0 1.06l-2.25 2.25a.75.75 0 0 1-1.06-1.06l1.72-1.72-1.72-1.72a.75.75 0 0 1 0-1.06Zm4.28 4.28a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" clip-rule="evenodd"/></svg>
+      <span class="bottom-nav__label">Terminal</span>
+    </div>
+    <div class="bottom-nav__item" data-v="set" onclick="switchV('set',this)">
+      <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 0 0-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 0 0-2.282.819l-.922 1.597a1.875 1.875 0 0 0 .432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 0 0 0 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 0 0-.432 2.385l.922 1.597a1.875 1.875 0 0 0 2.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.182.088.277.228.297.35l.178 1.071c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.114-.26.297-.349.344-.165.673-.356.985-.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 0 0 2.28-.819l.923-1.597a1.875 1.875 0 0 0-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 0 0 0-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 0 0-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 0 0-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 0 0-1.85-1.567h-1.843ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" clip-rule="evenodd"/></svg>
+      <span class="bottom-nav__label">Settings</span>
+    </div>
+  </nav>
+
+  <!-- Drawer overlay -->
+  <div class="drawer-overlay" id="drawerOverlay" onclick="toggleDrawer(false)"></div>
 </div>
 
-<div class="panel" id="filesP"><div class="sec"><h3>📁 ไฟล์โปรเจกต์จริง</h3><div style="margin-bottom:6px"><button class="tact" onclick="loadFiles()">🔄 รีเฟรช</button><span id="fCount" style="font-size:10px;color:var(--muted);margin-left:8px">กำลังโหลด...</span></div><div class="ftree" id="ftree"></div></div></div>
-<div class="panel" id="termP"><div class="sec"><h3>💻 เทอร์มินัลจริง</h3><div id="termC" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:'Courier New',monospace;font-size:11px;line-height:1.6;min-height:250px"><div class="tline"><span class="tp">$</span><span class="tsuc">Terminal พร้อมใช้งาน (รันบนเครื่องจริง)</span></div><div id="tLines"></div></div><div style="display:flex;gap:6px;margin-top:6px"><input type="text" class="sel" id="tInp" placeholder="พิมพ์คำสั่ง shell..." style="flex:1" onkeydown="if(event.key==='Enter')runT()"><button class="tact pri" onclick="runT()">รัน</button></div></div></div>
-<div class="panel" id="setP"><div class="sec"><h3>⚙️ ตั้งค่า</h3><div class="row"><div class="lbl">Claude CLI Path<small>ตำแหน่งคำสั่ง Claude</small></div><input type="text" class="sel" id="cPath" value="claude" style="width:140px"></div><div class="row"><div class="lbl">Project Path<small>โฟลเดอร์ที่ Claude จะทำงานด้วย</small></div><input type="text" class="sel" id="projP" value="" style="width:240px"></div><div class="row click" onclick="reconnect()"><div class="lbl" style="color:var(--purple)">🔄 เชื่อมต่อใหม่<small>รีเฟรชการเชื่อมต่อกับเซิร์ฟเวอร์</small></div></div></div></div>
+<!-- Help Modal -->
+<div class="modal" id="helpM">
+  <div class="modal__box">
+    <h3 class="modal__title">Slash Commands</h3>
+    <p class="modal__text">Type in chat and press Enter.</p>
+    <ul class="modal__list">
+      <li><code>/clear</code> - Clear chat screen</li>
+      <li><code>/help</code> - Show this guide</li>
+      <li><code>/run &lt;command&gt;</code> - Run shell command (e.g. <code>/run git status</code>)</li>
+      <li><code>/read &lt;file&gt;</code> - Read file content (e.g. <code>/read package.json</code>)</li>
+      <li><code>/write &lt;file&gt; &lt;content&gt;</code> - Create or edit a file</li>
+      <li><code>/git &lt;args&gt;</code> - Run git commands</li>
+      <li><code>/npm &lt;args&gt;</code> - Run npm commands</li>
+      <li><code>/ls</code>, <code>/cat</code>, <code>/mkdir</code>, <code>/pwd</code> - Common shell shortcuts</li>
+      <li><code>/list</code> or <code>/files</code> - Refresh project file list</li>
+    </ul>
+    <p class="modal__text" style="font-size:11px;color:var(--color-text-muted)">Note: Commands starting with / are executed locally and not sent to AI.</p>
+    <div class="modal__footer">
+      <button class="btn btn--primary" onclick="closeM('helpM')">Got it</button>
+    </div>
+  </div>
 </div>
 
-<div class="rp" id="rightP"><div class="rph"><span>💻 เทอร์มินัล</span><button class="rcbtn" onclick="toggleR()">✕</button></div><div class="tarea" id="rpT"><div class="tline"><span class="tp">❯</span><span class="tsuc">Terminal เชื่อมต่อเครื่องจริง</span></div><div id="rpL"></div><div class="til"><span class="tp">❯</span><input type="text" class="tinp" id="rpInp" placeholder="พิมพ์คำสั่ง..." onkeydown="if(event.key==='Enter')runRpT()"></div></div></div>
-
-<div class="sb"><div class="si"><div class="sdot" id="sDot"></div><span id="sText">กำลังเชื่อมต่อ...</span></div><div class="si" id="sProj">📁 ---</div><div class="si" id="sSes">Session: ใหม่</div><div class="sp"></div><div class="si" id="sNode">Node: ---</div><div class="si">Ctrl+B: Sidebar</div><div class="si">Ctrl+N: แชทใหม่</div></div>
-</main>
+<!-- Notification -->
+<div class="notif" id="notif">
+  <span id="nI">
+    <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd"/></svg>
+  </span>
+  <span id="nT">Message</span>
 </div>
-
-<div class="modal" id="helpM"><div class="mbox"><h3>📚 คำสั่ง Slash (/)</h3><p>พิมพ์ในช่องแชทแล้วกด Enter</p><ul><li><code>/clear</code> - ล้างหน้าจอแชท</li><li><code>/help</code> - แสดงคู่มือนี้</li><li><code>/run &lt;คำสั่ง&gt;</code> - รันคำสั่ง Shell จริง (เช่น <code>/run git status</code>)</li><li><code>/ls</code> - แสดงไฟล์ในโฟลเดอร์ปัจจุบัน</li><li><code>/cat &lt;ไฟล์&gt;</code> - อ่านเนื้อหาไฟล์ (เหมือน /read)</li><li><code>/read &lt;ไฟล์&gt;</code> - อ่านเนื้อหาไฟล์ (เช่น <code>/read package.json</code>)</li><li><code>/write &lt;ไฟล์&gt; &lt;เนื้อหา&gt;</code> - สร้าง/แก้ไขไฟล์</li><li><code>/git &lt;args&gt;</code> - รันคำสั่ง Git (เช่น <code>/git status</code>)</li><li><code>/npm &lt;args&gt;</code> - รันคำสั่ง NPM (เช่น <code>/npm install</code>)</li><li><code>/mkdir /rm /cp /mv /pwd /echo /touch</code> - คำสั่ง shell ทั่วไป</li><li><code>/list</code> หรือ <code>/files</code> - รีเฟรชรายการไฟล์โปรเจกต์</li></ul><p style="margin-top:10px;font-size:11px;color:var(--muted)">หมายเหตุ: คำสั่งที่ขึ้นต้นด้วย / จะไม่ส่งไป AI แต่จะเรียกทำงานบนเครื่องจริงทันที</p><div style="text-align:right;margin-top:12px"><button class="mbtn" onclick="closeM('helpM')">เข้าใจแล้ว</button></div></div></div>
-
-<div class="notif" id="notif"><span id="nI">✅</span><span id="nT">ข้อความ</span></div>
 
 <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
@@ -162,14 +575,23 @@ let ws,sid='s_'+Date.now(),procRun=false,proj={p:'',n:''},recAtt=0,currentStream
 let term=null,fitAddon=null,ptyActive=false;
 const $=id=>document.getElementById(id);
 
+function safeSend(obj){
+  try{
+    const json=JSON.stringify(obj);
+    if(ws&&ws.readyState===1)ws.send(json);
+  }catch(e){
+    console.error('[WS SEND ERROR]', e, obj);
+  }
+}
+
 function conn(){
   const url=`${location.protocol==='https:'?'wss:':'ws:'}//${location.host}`;
   updateC('wait');
   try{
     ws=new WebSocket(url);
-    ws.onopen=()=>{recAtt=0;updateC('conn');$('cStat').innerHTML='<svg viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="4"/></svg><span>เชื่อมต่อแล้ว</span>';noti('เชื่อมต่อเซิร์ฟเวอร์สำเร็จ','suc');$('xBtn').style.display='none';$('sBtn').style.display='flex'};
+    ws.onopen=()=>{recAtt=0;updateC('conn');$('cStat').innerHTML='<span class="status-badge__dot"></span><span>Online</span>';$('cStat').className='status-badge status-badge--online';$('xBtn').style.display='none';$('sBtn').style.display='flex'};
     ws.onmessage=e=>{try{handleMsg(JSON.parse(e.data))}catch(err){console.error(err)}};
-    ws.onclose=()=>{updateC('disc');if(recAtt<10){recAtt++;setTimeout(conn,Math.min(1000*Math.pow(2,recAtt),20000))}else{$('helpM').classList.add('open')}};
+    ws.onclose=()=>{updateC('disc');if(recAtt<10){recAtt++;setTimeout(conn,Math.min(1000*Math.pow(2,recAtt),20000))}else{$('helpM').classList.add('modal--open')}};
     ws.onerror=()=>updateC('disc');
   }catch(e){updateC('disc')}
 }
@@ -179,44 +601,44 @@ function handleMsg(d){
     case 'system':
       proj.p=d.data.projectPath;proj.n=d.data.projectName;
       $('pName').textContent=d.data.projectName;$('pPath').textContent=d.data.projectPath;
-      $('tPath').textContent=d.data.projectPath;$('sProj').textContent='📁 '+d.data.projectName;
-      $('sNode').textContent='Node: '+d.data.nodeVersion;
+      $('tPath').textContent=d.data.projectPath;$('sProj').textContent=d.data.projectName;
+      $('sNode').textContent='Node '+d.data.nodeVersion;
       $('projP').value=d.data.projectPath;loadFiles();break;
     case 'stream':streamOut(d.data.text);break;
     case 'complete':compOut(d.data);break;
     case 'status':$('sText').textContent=d.data.message;break;
     case 'error':handleErr(d.data);break;
-    case 'terminal_output':addTL(d.data.text,'out');break;
-    case 'terminal_error':addTL(d.data.text,'err');break;
-    case 'terminal_complete':addTL(`\n✅ เสร็จสิ้น (exit: ${d.data.code})`,'suc');break;
-    case 'file_list':drawTree(d.data.files);$('fCount').textContent=d.data.files.length+' รายการ';break;
-    case 'file_content':noti(`อ่านไฟล์ ${d.data.path} สำเร็จ`,'suc');addMsg('sys',`📖 เนื้อหาไฟล์ <code>${esc(d.data.path)}</code>:\n<pre><code>${esc(d.data.content)}</code></pre>`);break;
-    case 'file_written':noti(`เขียนไฟล์ ${d.data.path} สำเร็จ`,'suc');loadFiles();break;
-    case 'file_error':noti(`Error: ${d.data.error}`,'err');break;
+    case 'terminal_output':addTL(d.data.text,'terminal-out');break;
+    case 'terminal_error':addTL(d.data.text,'terminal-err');break;
+    case 'terminal_complete':addTL('\nDone (exit: '+d.data.code+')','terminal-suc');break;
+    case 'file_list':drawTree(d.data.files);$('fCount').textContent=d.data.files.length+' items';break;
+    case 'file_content':noti('Read '+d.data.path+' success','suc');addMsg('sys','<svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625ZM7.5 15a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 7.5 15Zm.75-2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" clip-rule="evenodd"/></svg> File <code>'+esc(d.data.path)+'</code>:<pre><code>'+esc(d.data.content)+'</code></pre>');break;
+    case 'file_written':noti('Wrote '+d.data.path+' success','suc');loadFiles();break;
+    case 'file_error':noti('Error: '+d.data.error,'err');break;
     case 'stderr':streamOut(d.data.text);break;
     case 'pty_output':if(term)term.write(d.data.text);break;
-    case 'pty_ready':noti('Claude Interactive พร้อมใช้งาน','suc');$('ptyBtn').textContent='🤖 Claude Interactive กำลังทำงาน';break;
-    case 'pty_exit':noti(`Claude Interactive หยุด (exit: ${d.data.code})`,'inf');stopPTYUI();break;
+    case 'pty_ready':noti('Claude Interactive ready','suc');break;
+    case 'pty_exit':noti('Claude Interactive stopped (exit: '+d.data.code+')','inf');stopPTYUI();break;
   }
 }
 
 function updateC(s){
-  const st=$('cStat'),dot=$('sDot'),txt=$('sText');
-  if(s==='conn'){st.className='cstat conn';dot.className='sdot';txt.textContent='เชื่อมต่อแล้ว'}
-  else if(s==='disc'){st.className='cstat disc';dot.className='sdot red';txt.textContent='ไม่ได้เชื่อมต่อ'}
-  else{st.className='cstat conn';dot.className='sdot orange';txt.textContent='กำลังเชื่อมต่อ...'}
+  const st=$('cStat');
+  if(s==='conn'){st.className='status-badge status-badge--online';st.innerHTML='<span class="status-badge__dot"></span><span>Online</span>'}
+  else if(s==='disc'){st.className='status-badge status-badge--offline';st.innerHTML='<span class="status-badge__dot"></span><span>Offline</span>'}
+  else{st.className='status-badge status-badge--wait';st.innerHTML='<span class="status-badge__dot"></span><span>Connecting...</span>'}
 }
 
 function send(txt){
-  if(!ws||ws.readyState!==1){noti('ไม่ได้เชื่อมต่อเซิร์ฟเวอร์','err');return}
+  if(!ws||ws.readyState!==1){noti('Server not connected','err');return}
   if(!txt.trim())return;
   const t=txt.trim();
   if(t.startsWith('/')){execSlash(t);$('inp').value='';autoR($('inp'));return}
   procRun=true;currentStream='';
   const w=$('ws');if(w)w.style.display='none';
   addMsg('user',esc(t));showTyp();
-  $('sBtn').style.display='none';$('xBtn').style.display='flex';$('sText').textContent='Claude กำลังทำงาน...';
-  ws.send(JSON.stringify({type:'chat',message:t,sessionId:sid,projectPath:$('projP').value||proj.p}));
+  $('sBtn').style.display='none';$('xBtn').style.display='flex';
+  safeSend({type:'chat',message:t,sessionId:sid,projectPath:$('projP').value||proj.p});
 }
 
 function doSend(){send($('inp').value)}
@@ -234,143 +656,185 @@ function parseArgs(str){
 function execSlash(cmd){
   const p=cmd.substring(1).split(' '),c=p[0].toLowerCase(),a=p.slice(1).join(' ');
   switch(c){
-    case 'clear':$('msgs').innerHTML='<div class="ws" id="ws"><div class="wl">C</div><h2>แชทใหม่พร้อมใช้งาน!</h2><p>พิมพ์คำสั่งหรือคลิกปุ่มด้านบน</p></div>';noti('ล้างแชทแล้ว','inf');break;
-    case 'help':$('helpM').classList.add('open');break;
-    case 'run':case 'exec':case 'cmd':if(!a){noti('กรุณาระบุคำสั่ง เช่น /run ls -la','inf');break}noti(`กำลังรัน: ${a}`,'inf');runShell(a);break;
-    case 'read':if(!a){noti('กรุณาระบุไฟล์ เช่น /read package.json','inf');break}noti(`กำลังอ่าน: ${a}`,'inf');reqFile(a);break;
+    case 'clear':$('msgs').innerHTML='<div class="welcome" id="ws"><div class="welcome__logo">C</div><div class="welcome__title">New Chat Ready</div><div class="welcome__desc">Type a message or pick an action above</div></div>';noti('Chat cleared','inf');break;
+    case 'help':showModal('help');break;
+    case 'run':case 'exec':case 'cmd':if(!a){noti('Please provide a command, e.g. /run ls -la','inf');break}noti('Running: '+a,'inf');runShell(a);break;
+    case 'read':if(!a){noti('Please provide a file, e.g. /read package.json','inf');break}noti('Reading: '+a,'inf');reqFile(a);break;
     case 'write':
       const args=parseArgs(a);
-      if(args.length<2){noti('รูปแบบ: /write "ชื่อไฟล์" เนื้อหา','inf');break}
+      if(args.length<2){noti('Format: /write "filename" content','inf');break}
       const f=args[0],cnt=args.slice(1).join(' ');
-      noti(`กำลังเขียน: ${f}`,'inf');
-      ws.send(JSON.stringify({type:'write_file',path:f,content:cnt,projectPath:$('projP').value||proj.p}));
+      noti('Writing: '+f,'inf');
+      safeSend({type:'write_file',path:f,content:cnt,projectPath:$('projP').value||proj.p});
       break;
-    case 'git':runShell(`git ${a}`);break;
-    case 'npm':runShell(`npm ${a}`);break;
-    case 'node':runShell(`node ${a}`);break;
-    case 'ls':case 'dir':runShell(`ls ${a}`);break;
-    case 'cat':if(!a){noti('กรุณาระบุไฟล์ เช่น /cat package.json','inf');break}reqFile(a);break;
+    case 'git':runShell('git '+a);break;
+    case 'npm':runShell('npm '+a);break;
+    case 'node':runShell('node '+a);break;
+    case 'ls':case 'dir':runShell('ls '+a);break;
+    case 'cat':if(!a){noti('Please provide a file, e.g. /cat package.json','inf');break}reqFile(a);break;
     case 'mkdir':case 'rm':case 'cp':case 'mv':case 'pwd':case 'echo':case 'touch':case 'whoami':case 'which':case 'uname':
       if(c==='pwd')runShell('pwd');
-      else if(!a){noti(`กรุณาระบุคำสั่งหลัง /${c} เช่น /${c} ...`,'inf');break}
-      else runShell(`${c} ${a}`);
+      else if(!a){noti('Please provide arguments for /'+c+' ...','inf');break}
+      else runShell(c+' '+a);
       break;
-    case 'list':case 'files':loadFiles();noti('รีเฟรชรายการไฟล์','inf');break;
-    default:noti(`ไม่รู้จักคำสั่ง /${c} พิมพ์ /help เพื่อดูรายการ`,'inf');break;
+    case 'list':case 'files':loadFiles();noti('Refreshed file list','inf');break;
+    default:noti('Unknown command /'+c+' - type /help for list','inf');break;
   }
 }
 
 function runShell(c){
   if(!ws||ws.readyState!==1)return;
-  addMsg('sys',`💻 รันคำสั่ง: <code>${esc(c)}</code>`);
-  ws.send(JSON.stringify({type:'terminal',command:c,projectPath:$('projP').value||proj.p}));
+  addMsg('sys','<svg class="icon" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2.25 6a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V6Zm3.97.97a.75.75 0 0 1 1.06 0l2.25 2.25a.75.75 0 0 1 0 1.06l-2.25 2.25a.75.75 0 0 1-1.06-1.06l1.72-1.72-1.72-1.72a.75.75 0 0 1 0-1.06Zm4.28 4.28a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" clip-rule="evenodd"/></svg> Command: <code>'+esc(c)+'</code>');
+  safeSend({type:'terminal',command:c,projectPath:$('projP').value||proj.p});
 }
 
 function reqFile(p){
   if(!ws||ws.readyState!==1)return;
-  ws.send(JSON.stringify({type:'read_file',path:p,projectPath:$('projP').value||proj.p}));
+  safeSend({type:'read_file',path:p,projectPath:$('projP').value||proj.p});
 }
 
 function streamOut(t){
   const ty=$('tyM');if(ty)ty.remove();
   let sm=$('streamMsg');
-  if(!sm){const m=$('msgs');sm=document.createElement('div');sm.className='msg';sm.id='streamMsg';sm.innerHTML=`<div class="mav claude">C</div><div class="mcon"><div class="mhdr"><span class="msen">Claude</span><span class="mtime">กำลังทำงาน...</span></div><div class="mbody" id="streamB"></div></div>`;m.appendChild(sm)}
+  if(!sm){const m=$('msgs');sm=document.createElement('div');sm.className='msg message';sm.id='streamMsg';sm.innerHTML='<div class="message__avatar message__avatar--claude">C</div><div class="message__content"><div class="message__header"><span class="message__sender">Claude</span><span class="message__time">Working...</span></div><div class="message__body" id="streamB"></div></div>';m.appendChild(sm)}
   currentStream+=t;const b=$('streamB');if(b)b.innerHTML=fmt(currentStream);
   $('msgs').scrollTop=$('msgs').scrollHeight;
 }
 
 function compOut(d){
-  procRun=false;const sm=$('streamMsg');if(sm){sm.id='';sm.querySelector('.mtime').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}
-  $('sBtn').style.display='flex';$('xBtn').style.display='none';$('sText').textContent='พร้อมใช้งาน';
+  procRun=false;const sm=$('streamMsg');if(sm){sm.id='';sm.querySelector('.message__time').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}
+  $('sBtn').style.display='flex';$('xBtn').style.display='none';
 }
 
 function handleErr(d){
   procRun=false;const ty=$('tyM');if(ty)ty.remove();
-  addMsg('sys',`⚠️ ${esc(d.message)}${d.hint?'<br><small style="color:var(--muted)">'+esc(d.hint)+'</small>':''}`);
-  $('sBtn').style.display='flex';$('xBtn').style.display='none';$('sText').textContent='เกิดข้อผิดพลาด';
+  addMsg('sys','<svg class="icon" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg> '+esc(d.message)+(d.hint?'<br><small style="color:var(--color-text-muted)">'+esc(d.hint)+'</small>':''));
+  $('sBtn').style.display='flex';$('xBtn').style.display='none';
 }
 
-function stopProc(){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'stop',sessionId:sid}));procRun=false;$('sBtn').style.display='flex';$('xBtn').style.display='none';$('sText').textContent='หยุดโดยผู้ใช้'}
+function stopProc(){safeSend({type:'stop',sessionId:sid});procRun=false;$('sBtn').style.display='flex';$('xBtn').style.display='none';}
 
 function hKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend()}}
-function autoR(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,150)+'px'}
+function autoR(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,140)+'px'}
 function fmt(t){let s=esc(t);s=s.replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>');s=s.replace(/`([^`]+)`/g,'<code>$1</code>');s=s.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>');s=s.replace(/\n/g,'<br>');return s}
 function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+
 function addMsg(role,html){
-  const m=document.createElement('div');m.className='msg';
-  const n=role==='claude'?'Claude':role==='user'?'คุณ':'ระบบ';
+  const m=document.createElement('div');m.className='message message--'+role;
+  const n=role==='claude'?'Claude':role==='user'?'You':'System';
   const av=role==='claude'?'C':role==='user'?'U':'S';
-  m.innerHTML=`<div class="mav ${role}">${av}</div><div class="mcon"><div class="mhdr"><span class="msen">${n}</span><span class="mtime">${new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</span></div><div class="mbody">${html}</div></div>`;
+  const time=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  m.innerHTML='<div class="message__avatar message__avatar--'+role+'">'+av+'</div><div class="message__content"><div class="message__header"><span class="message__sender">'+n+'</span><span class="message__time">'+time+'</span></div><div class="message__body">'+html+'</div></div>';
   $('msgs').appendChild(m);$('msgs').scrollTop=$('msgs').scrollHeight;
 }
+
 function showTyp(){
   if($('tyM'))return;
-  const d=document.createElement('div');d.className='msg';d.id='tyM';
-  d.innerHTML=`<div class="mav claude">C</div><div class="mcon"><div class="mhdr"><span class="msen">Claude</span><span class="mtime">กำลังพิมพ์...</span></div><div class="typ"><span></span><span style="animation-delay:.2s"></span><span style="animation-delay:.4s"></span></div></div>`;
+  const d=document.createElement('div');d.className='message';d.id='tyM';
+  d.innerHTML='<div class="message__avatar message__avatar--claude">C</div><div class="message__content"><div class="message__header"><span class="message__sender">Claude</span><span class="message__time">Typing...</span></div><div class="typing"><span></span><span></span><span></span></div></div>';
   $('msgs').appendChild(d);$('msgs').scrollTop=$('msgs').scrollHeight;
 }
-function toggleS(){$('sidebar').classList.toggle('collapsed')}
-function toggleR(){$('rightP').classList.toggle('open')}
-function togglePTY(){switchV('pty',null)}
+
+function toggleS(){
+  const sb=$('sidebar');
+  sb.classList.toggle('sidebar--expanded');
+}
+
+function toggleR(){
+  $('rightP').classList.toggle('right-panel--open');
+}
+
+function toggleDrawer(show){
+  const ov=$('drawerOverlay');
+  const sb=$('sidebar');
+  if(show){ov.classList.add('drawer-overlay--open');sb.style.position='fixed';sb.style.left='0';sb.style.top='0';sb.style.bottom='0';sb.style.zIndex='36';sb.style.display='flex';sb.classList.add('sidebar--expanded');}
+  else{ov.classList.remove('drawer-overlay--open');sb.style.position='';sb.style.left='';sb.style.top='';sb.style.bottom='';sb.style.zIndex='';sb.classList.remove('sidebar--expanded');if(window.innerWidth>=768){sb.style.display='flex'}else{sb.style.display='none'}}
+}
+
 function switchV(view,el){
-  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('vis'));
-  document.querySelectorAll('.pty-wrap').forEach(p=>p.classList.remove('vis'));
-  const tp=$(view+'P');if(tp){
-    if(view==='pty')tp.classList.add('vis');
-    else tp.classList.add('vis');
-  }
-  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));
-  if(el)el.classList.add('act');
-  else if(view==='pty'){
-    const n=document.querySelector('.ni[data-v="pty"]');
-    if(n)n.classList.add('act');
-  }
+  // Close right panel when switching views on mobile
+  if(window.innerWidth<1280)$('rightP').classList.remove('right-panel--open');
+  
+  // Pages
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('page--active'));
+  const tp=$('page-'+view);if(tp)tp.classList.add('page--active');
+  
+  // Sidebar items
+  document.querySelectorAll('.sidebar__item').forEach(n=>n.classList.remove('sidebar__item--active'));
+  const sbItem=document.querySelector('.sidebar__item[data-v="'+view+'"]');
+  if(sbItem)sbItem.classList.add('sidebar__item--active');
+  
+  // Bottom nav items
+  document.querySelectorAll('.bottom-nav__item').forEach(n=>n.classList.remove('bottom-nav__item--active'));
+  const bnItem=document.querySelector('.bottom-nav__item[data-v="'+view+'"]');
+  if(bnItem)bnItem.classList.add('bottom-nav__item--active');
+  
   if(view==='files')loadFiles();
 }
-function setMode(m){$('modeChat').classList.toggle('act',m==='chat');$('modeCode').classList.toggle('act',m==='code')}
+
+function setMode(m){$('modeChat').classList.toggle('input-bar__mode--active',m==='chat');$('modeCode').classList.toggle('input-bar__mode--active',m==='code')}
+
 function newChat(){
-  $('msgs').innerHTML='<div class="ws" id="ws"><div class="wl">C</div><h2>แชทใหม่พร้อมใช้งาน!</h2><p>พิมพ์คำสั่งหรือคลิกปุ่มด้านบน</p></div>';
-  sid='s_'+Date.now();$('sSes').textContent='Session: ใหม่';noti('เริ่มแชทใหม่แล้ว','inf');
+  $('msgs').innerHTML='<div class="welcome" id="ws"><div class="welcome__logo">C</div><div class="welcome__title">New Chat Ready</div><div class="welcome__desc">Type a message or pick an action above</div></div>';
+  sid='s_'+Date.now();noti('New chat started','inf');
 }
-function loadFiles(){if(!ws||ws.readyState!==1)return;ws.send(JSON.stringify({type:'list_files',path:'',projectPath:$('projP').value||proj.p}))}
+
+function loadFiles(){if(!ws||ws.readyState!==1)return;safeSend({type:'list_files',path:'',projectPath:$('projP').value||proj.p})}
+
 function drawTree(files){
   const c=$('ftree');c.innerHTML='';
   files.forEach(f=>{
-    const d=document.createElement('div');d.className='fitem'+(f.isDirectory?' fold':'');
-    d.innerHTML=`<span class="ind">${f.isDirectory?'📁':'📄'}</span><span>${esc(f.name)}</span>`;
+    const d=document.createElement('div');d.className='file-item'+(f.isDirectory?' file-item--folder':'');
+    d.innerHTML='<span class="file-item__ind">'+(f.isDirectory?
+      '<svg class="icon" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M19.5 21a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3h-5.379a.75.75 0 0 1-.53-.22L11.47 3.66A2.25 2.25 0 0 0 9.879 3H4.5a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h15Z" clip-rule="evenodd"/></svg>':
+      '<svg class="icon" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625ZM7.5 15a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 7.5 15Zm.75-2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" clip-rule="evenodd"/></svg>')+
+      '</span><span>'+esc(f.name)+'</span>';
     d.onclick=()=>{if(!f.isDirectory)reqFile(f.path);};
     c.appendChild(d);
   });
 }
+
 function runT(){
   const v=$('tInp').value.trim();if(!v)return;
-  addTL('$ '+v,'tp');runShell(v);$('tInp').value='';
-}
-function runRpT(){
-  const v=$('rpInp').value.trim();if(!v)return;
-  const l=document.createElement('div');l.className='tline';l.innerHTML=`<span class="tp">❯</span><span class="tc">${esc(v)}</span>`;$('rpL').appendChild(l);
-  runShell(v);$('rpInp').value='';$('rpT').scrollTop=$('rpT').scrollHeight;
-}
-function addTL(text,type){
-  const l=document.createElement('div');l.className='tline';
-  l.innerHTML=`<span class="${type}">${esc(text)}</span>`;$('tLines').appendChild(l);
-  $('termC').scrollTop=$('termC').scrollHeight;
-}
-function reconnect(){if(ws)ws.close();conn();noti('กำลังเชื่อมต่อใหม่...','inf')}
-function showModal(id){$(id).classList.add('open')}
-function closeM(id){$(id).classList.remove('open')}
-function noti(text,type){
-  const n=$('notif');$('nT').textContent=text;
-  n.className='notif show '+(type||'inf');
-  setTimeout(()=>n.classList.remove('show'),3000);
+  addTL('$ '+v,'terminal-prompt');runShell(v);$('tInp').value='';
 }
 
+function runRpT(){
+  const v=$('rpInp').value.trim();if(!v)return;
+  const l=document.createElement('div');l.className='terminal-line';l.innerHTML='<span class="terminal-prompt">&gt;</span><span>'+esc(v)+'</span>';$('rpL').appendChild(l);
+  runShell(v);$('rpInp').value='';$('rpT').scrollTop=$('rpT').scrollHeight;
+}
+
+function addTL(text,type){
+  const l=document.createElement('div');l.className='terminal-line';
+  const cls=type==='terminal-prompt'?'terminal-prompt':type==='terminal-out'?'terminal-out':type==='terminal-err'?'terminal-err':type==='terminal-suc'?'terminal-suc':'terminal-out';
+  l.innerHTML='<span class="'+cls+'">'+esc(text)+'</span>';
+  $('tLines').appendChild(l);
+  $('termC').scrollTop=$('termC').scrollHeight;
+}
+
+function reconnect(){if(ws)ws.close();conn();noti('Reconnecting...','inf');}
+function showModal(id){$(id).classList.add('modal--open')}
+function closeM(id){$(id).classList.remove('modal--open')}
+
+function noti(text,type){
+  const n=$('notif');$('nT').textContent=text;
+  n.className='notif notif--'+(type||'inf');
+  setTimeout(()=>n.classList.remove('notif--show'),3000);
+}
+
+// Mobile menu button
+$('menuBtn').addEventListener('click',()=>{
+  if(window.innerWidth<768)toggleDrawer(true);
+  else toggleS();
+});
+
 function startPTY(){
-  if(!ws||ws.readyState!==1){noti('ไม่ได้เชื่อมต่อเซิร์ฟเวอร์','err');return}
+  if(!ws||ws.readyState!==1){noti('Server not connected','err');return}
   if(term){term.dispose();term=null}
   const el=$('ptyTerm');el.innerHTML='';
   term=new Terminal({
-    theme:{background:'#0a0a0f',foreground:'#e8e8f0',cursor:'#8b5cf6',selectionBackground:'#2a2a3a',black:'#0a0a0f',red:'#ef4444',green:'#10b981',yellow:'#f59e0b',blue:'#3b82f6',magenta:'#8b5cf6',cyan:'#06b6d4',white:'#e8e8f0'},
+    theme:{background:'#000000',foreground:'#e8e8f0',cursor:'#8b5cf6',selectionBackground:'#2a2a3a',black:'#0a0a0f',red:'#ef4444',green:'#22c55e',yellow:'#f59e0b',blue:'#3b82f6',magenta:'#8b5cf6',cyan:'#06b6d4',white:'#f8fafc'},
     fontFamily:"'SF Mono',Monaco,'Courier New',monospace",
     fontSize:13,
     cursorBlink:true,
@@ -381,12 +845,10 @@ function startPTY(){
   term.open(el);
   fitAddon.fit();
   
-  term.onData(d=>{
-    if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'pty_input',input:d,sessionId:sid}));
-  });
+  term.onData(d=>{safeSend({type:'pty_input',input:d,sessionId:sid});});
   
   const dims=fitAddon.proposeDimensions();
-  ws.send(JSON.stringify({
+  safeSend({
     type:'chat',
     message:'',
     sessionId:sid,
@@ -394,7 +856,7 @@ function startPTY(){
     mode:'pty',
     cols:Math.floor(dims.cols)||80,
     rows:Math.floor(dims.rows)||24
-  }));
+  });
   ptyActive=true;
   window.addEventListener('resize',resizePTY);
 }
@@ -403,11 +865,11 @@ function resizePTY(){
   if(!term||!fitAddon||!ptyActive)return;
   fitAddon.fit();
   const dims=fitAddon.proposeDimensions();
-  if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'pty_resize',cols:Math.floor(dims.cols)||80,rows:Math.floor(dims.rows)||24,sessionId:sid}));
+  safeSend({type:'pty_resize',cols:Math.floor(dims.cols)||80,rows:Math.floor(dims.rows)||24,sessionId:sid});
 }
 
 function stopPTY(){
-  if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'stop',sessionId:sid}));
+  safeSend({type:'stop',sessionId:sid});
   stopPTYUI();
 }
 
@@ -415,7 +877,6 @@ function stopPTYUI(){
   ptyActive=false;
   if(term){term.dispose();term=null}
   $('ptyTerm').innerHTML='';
-  $('ptyBtn').textContent='🤖 เปิด Claude Interactive';
   window.removeEventListener('resize',resizePTY);
 }
 
