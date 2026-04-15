@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code Web UI</title>
+<style>
+:root{--bg:#0a0a0f;--bg2:#12121a;--bg3:#1a1a25;--border:#2a2a3a;--text:#e8e8f0;--text2:#9898b0;--muted:#6a6a82;--purple:#8b5cf6;--blue:#3b82f6;--green:#10b981;--red:#ef4444;--orange:#f59e0b;--r:10px;--t:0.2s}
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);height:100vh;overflow:hidden}::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--border);border-radius:5px}
+.app{display:flex;height:100vh}.side{width:240px;min-width:240px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;transition:var(--t)}.side.collapsed{width:0;min-width:0;overflow:hidden;border:none}
+.sh{padding:16px;border-bottom:1px solid var(--border);display:flex;gap:12px;align-items:center}.logo{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--purple),#6366f1);display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff}
+.st h1{font-size:14px;font-weight:700;background:linear-gradient(135deg,#c4b5fd,var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent}.st span{font-size:10px;color:var(--muted)}
+.nav{flex:1;overflow-y:auto;padding:10px}.ns{margin-bottom:12px}.nst{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:6px 8px}
+.ni{display:flex;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;transition:var(--t);font-size:13px;color:var(--text2)}.ni:hover{background:var(--bg3);color:var(--text)}.ni.act{background:rgba(139,92,246,0.15);color:var(--purple)}
+.sf{padding:12px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;font-size:11px}.ua{width:26px;height:26px;border-radius:50%;background:var(--blue);display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;font-size:10px;flex-shrink:0}
+.main{flex:1;display:flex;flex-direction:column;min-width:0}.tb{height:48px;min-height:48px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:12px}
+.tbtn{width:30px;height:30px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px}.tbtn:hover{background:var(--bg3);color:var(--text)}
+.ttit{flex:1;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px}.tpath{color:var(--muted);font-weight:400;font-size:11px}
+.cstat{display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:600}.cstat.conn{background:rgba(16,185,129,0.15);color:var(--green)}.cstat.disc{background:rgba(239,68,68,0.15);color:var(--red)}.cstat.conn svg,.cstat.disc svg{width:8px;height:8px}
+.ta{display:flex;gap:6px}.tact{padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text2);font-size:11px;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit}.tact:hover{color:var(--text)}.tact.pri{background:linear-gradient(135deg,var(--purple),#6366f1);border-color:transparent;color:#fff}
+.area{flex:1;display:flex;overflow:hidden;position:relative}.cp{flex:1;display:flex;flex-direction:column;min-width:0}.msgs{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:16px}
+.ws{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:30px;text-align:center}.wl{width:60px;height:60px;border-radius:16px;background:linear-gradient(135deg,var(--purple),#6366f1);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:800;color:#fff;margin-bottom:16px}
+.ws h2{font-size:20px;font-weight:700;margin-bottom:6px;background:linear-gradient(135deg,#e8e8f0,#c4b5fd);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ws p{color:var(--muted);font-size:13px;margin-bottom:24px;max-width:400px;line-height:1.5}
+.qa{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;width:100%;max-width:440px}.qact{padding:12px;border-radius:var(--r);border:1px solid var(--border);background:var(--bg2);cursor:pointer;transition:var(--t);text-align:left;font-family:inherit}
+.qact:hover{border-color:var(--purple);background:rgba(139,92,246,0.1);transform:translateY(-1px)}.qact .qi{font-size:18px;margin-bottom:6px}.qact .qt{font-size:12px;font-weight:600;margin-bottom:2px}.qact .qd{font-size:10px;color:var(--muted);line-height:1.3}
+.msg{display:flex;gap:10px;animation:fadeIn .3s ease}@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.mav{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;flex-shrink:0}.mav.claude{background:linear-gradient(135deg,var(--purple),#6366f1);color:#fff}.mav.user{background:var(--blue);color:#fff}.mav.sys{background:var(--bg3);color:var(--muted)}
+.mcon{flex:1;min-width:0}.mhdr{display:flex;align-items:center;gap:6px;margin-bottom:4px}.msen{font-size:11px;font-weight:600}.mtime{font-size:9px;color:var(--muted)}
+.mbody{font-size:12.5px;line-height:1.6;color:var(--text)} .mbody pre{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:10px;margin:8px 0;overflow-x:auto}.mbody pre code{background:none;padding:0;color:var(--text);font-size:11px;line-height:1.5}
+.mbody code{font-family:'Courier New',monospace;background:var(--bg3);padding:1px 5px;border-radius:4px;font-size:11px;color:var(--purple)}
+.input{padding:12px 16px 16px;border-top:1px solid var(--border);background:var(--bg2)}
+.sug{display:flex;gap:6px;margin-bottom:8px;overflow-x:auto;padding-bottom:4px}.sug::-webkit-scrollbar{height:0}.schip{padding:4px 10px;border-radius:16px;border:1px solid var(--border);background:var(--bg3);color:var(--muted);font-size:10px;cursor:pointer;white-space:nowrap;transition:var(--t);font-family:inherit}
+.schip:hover{border-color:var(--purple);color:var(--purple)}
+.iwrap{display:flex;gap:8px;align-items:flex-end}.icon{flex:1;background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:4px;transition:var(--t);display:flex;flex-direction:column}
+.icon:focus-within{border-color:var(--purple);box-shadow:0 0 0 2px rgba(139,92,246,0.2)}
+.imode{display:flex;gap:4px;padding:3px 6px 0}.imb{padding:2px 8px;border-radius:4px;border:1px solid var(--border);background:var(--bg2);color:var(--muted);font-size:10px;cursor:pointer;transition:var(--t);font-family:inherit}
+.imb:hover{color:var(--text)}.imb.act{background:rgba(139,92,246,0.15);border-color:var(--purple);color:var(--purple)}
+.itxt{width:100%;background:none;border:none;outline:none;color:var(--text);font-family:inherit;font-size:13px;padding:8px 10px 6px;resize:none;min-height:38px;max-height:150px;line-height:1.4}
+.itxt::placeholder{color:var(--muted)}
+.sbtn{width:34px;height:34px;border-radius:8px;border:none;background:linear-gradient(135deg,var(--purple),#6366f1);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--t);flex-shrink:0;font-size:16px}.sbtn:hover{transform:scale(1.05)}.sbtn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+.rp{width:0;min-width:0;background:var(--bg2);border-left:1px solid var(--border);display:flex;flex-direction:column;transition:width 0.25s ease, min-width 0.25s ease;overflow:hidden}.rp.open{width:380px;min-width:380px}
+.rph{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:12px;font-weight:600}
+.rcbtn{width:26px;height:26px;border-radius:6px;border:none;background:none;color:var(--muted);cursor:pointer;font-size:14px}
+.tarea{flex:1;padding:10px 14px;overflow-y:auto;font-family:'Courier New',monospace;font-size:11px;line-height:1.7}
+.tline{display:flex;gap:6px;margin-bottom:2px}.tp{color:var(--purple)}.tc{color:var(--text)}.tout{color:var(--text2)}.terr{color:var(--red)}.tsuc{color:var(--green)}.tinfo{color:var(--blue)}
+.til{display:flex;gap:6px;align-items:center;margin-top:4px}.tinp{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:'Courier New',monospace;font-size:11px}
+.sb{height:26px;background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 12px;gap:14px;font-size:10px;color:var(--muted)}
+.si{display:flex;align-items:center;gap:4px}.sdot{width:6px;height:6px;border-radius:50%;background:var(--green)}.sdot.red{background:var(--red)}.sdot.orange{background:var(--orange)}
+.sp{flex:1}
+.panel{display:none;flex:1;overflow-y:auto;padding:20px}.panel.vis{display:block}
+.sec{margin-bottom:24px}.sec h3{font-size:13px;font-weight:700;margin-bottom:12px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;margin-bottom:6px}
+.row.click{cursor:pointer}.row.click:hover{border-color:var(--purple);background:rgba(139,92,246,0.1)}
+.lbl{font-size:12px;font-weight:500}.lbl small{display:block;font-size:10px;color:var(--muted);font-weight:400;margin-top:1px}
+.tog{width:36px;height:18px;background:var(--bg3);border:1px solid var(--border);border-radius:9px;position:relative;cursor:pointer;transition:var(--t)}.tog.act{background:var(--purple);border-color:var(--purple)}
+.tog::after{content:'';position:absolute;top:2px;left:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:var(--t)}.tog.act::after{left:20px}
+.sel{padding:4px 8px;border-radius:6px;border:1px solid var(--border);background:var(--bg3);color:var(--text);font-size:11px;font-family:inherit;outline:none}
+.ftree{padding:0 8px}.fitem{display:flex;align-items:center;gap:5px;padding:3px 6px;border-radius:4px;cursor:pointer;font-family:'Courier New',monospace;font-size:11px;color:var(--text2);transition:var(--t)}.fitem:hover{background:var(--bg3);color:var(--text)}.fitem.fold{color:var(--blue);font-weight:600}
+.fitem .ind{display:inline-block;width:14px}
+.notif{position:fixed;top:16px;right:16px;background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;box-shadow:0 4px 16px rgba(0,0,0,0.5);z-index:100;display:flex;align-items:center;gap:8px;font-size:12px;transform:translateX(120%);transition:transform 0.25s ease;max-width:320px}.notif.show{transform:translateX(0)}
+.notif.suc{border-left:3px solid var(--green)}.notif.err{border-left:3px solid var(--red)}.notif.inf{border-left:3px solid var(--blue)}
+.typ{display:flex;gap:3px;padding:6px 0}.typ span{width:5px;height:5px;border-radius:50%;background:var(--purple);animation:ty 1.2s infinite}@keyframes ty{0%,60%,100%{opacity:0.3;transform:scale(0.8)}30%{opacity:1;transform:scale(1)}}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);z-index:200;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 0.2s}.modal.open{opacity:1;pointer-events:all}
+.mbox{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:20px;max-width:480px;width:90%;box-shadow:0 8px 32px rgba(0,0,0,0.5);transform:scale(0.95);transition:transform 0.2s}.modal.open .mbox{transform:scale(1)}
+.mbox h3{font-size:15px;font-weight:700;margin-bottom:8px}.mbox p{font-size:12px;color:var(--text2);line-height:1.5;margin-bottom:12px}
+.mbox ul{font-size:11px;color:var(--text);padding-left:16px;margin-bottom:8px}.mbox li{margin-bottom:3px}.mbox code{background:var(--bg3);padding:1px 4px;border-radius:3px;color:var(--purple);font-family:'Courier New',monospace;font-size:10px}
+.mbtn{padding:6px 14px;border-radius:6px;border:none;background:var(--purple);color:#fff;font-size:12px;font-weight:600;cursor:pointer;font-family:inherit}.mbtn:hover{opacity:0.9}
+@media(max-width:800px){.side{position:absolute;left:0;top:0;bottom:0;z-index:50;box-shadow:0 4px 16px rgba(0,0,0,0.5)}.side.collapsed{width:0}.rp.open{position:absolute;right:0;top:0;bottom:0;width:100%;min-width:100%}.qa{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side" id="sidebar">
+<div class="sh"><div class="logo">C</div><div class="st"><h1>Claude Code</h1><span>Real CLI Integration</span></div></div>
+<nav class="nav">
+<div class="ns"><div class="nst">เมนูหลัก</div><div class="ni act" data-v="chat" onclick="switchV('chat',this)">💬 แชทกับ Claude</div><div class="ni" data-v="files" onclick="switchV('files',this)">📂 ไฟล์โปรเจกต์</div><div class="ni" data-v="term" onclick="switchV('term',this)">💻 เทอร์มินัล</div></div>
+<div class="ns"><div class="nst">ตั้งค่า</div><div class="ni" data-v="set" onclick="switchV('set',this)">⚙️ ตั้งค่า</div><div class="ni" onclick="showModal('help')">❓ ช่วยเหลือ</div></div>
+</nav>
+<div class="sf"><div class="ua">U</div><div><div id="pName" style="font-weight:600">กำลังโหลด...</div><div id="pPath" style="font-size:9px;color:var(--muted)">...</div></div></div>
+</aside>
+
+<main class="main">
+<div class="tb">
+<button class="tbtn" onclick="toggleS()">☰</button>
+<div class="ttit"><span>Claude Code</span><span class="tpath" id="tPath">/project</span></div>
+<div class="cstat disc" id="cStat"><svg viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="4"/></svg><span>ไม่ได้เชื่อมต่อ</span></div>
+<div class="ta"><button class="tact" onclick="toggleR()">💻 เทอร์มินัล</button><button class="tact pri" onclick="newChat()">✚ แชทใหม่</button></div>
+</div>
+
+<div class="area">
+<div class="cp" id="chatP">
+<div class="msgs" id="msgs">
+<div class="ws" id="ws">
+<div class="wl">C</div>
+<h2>Claude Code Web UI</h2>
+<p>เชื่อมต่อกับ Claude CLI จริงบนเครื่องของคุณ สามารถอ่าน/เขียนไฟล์ รันคำสั่ง และใช้ Skills ได้ทั้งหมด</p>
+<div class="qa">
+<button class="qact" onclick="send('สร้าง React component ปุ่ม Login')"><div class="qi">🚀</div><div class="qt">สร้าง Component</div><div class="qd">Claude สร้างไฟล์จริงในโปรเจกต์</div></button>
+<button class="qact" onclick="send('อ่าน package.json แล้วสรุป dependencies')"><div class="qi">📖</div><div class="qt">อ่านไฟล์</div><div class="qd">Claude อ่านและวิเคราะห์โค้ดจริง</div></button>
+<button class="qact" onclick="send('ช่วยหาบั๊กในโปรเจกต์นี้')"><div class="qi">🔍</div><div class="qt">วิเคราะห์โค้ด</div><div class="qd">ตรวจสอบข้อผิดพลาดจริง</div></button>
+<button class="qact" onclick="send('รัน npm install แล้วบอกผลลัพธ์')"><div class="qi">📦</div><div class="qt">รันคำสั่ง</div><div class="qd">Claude รัน Terminal จริง</div></button>
+</div>
+</div>
+</div>
+
+<div class="input">
+<div class="sug">
+<button class="schip" onclick="send('/read package.json')">📖 อ่านไฟล์</button>
+<button class="schip" onclick="send('/run git status')">🌿 Git Status</button>
+<button class="schip" onclick="send('/run ls -la')">📁 รายการไฟล์</button>
+<button class="schip" onclick="send('/clear')">🧹 ล้างแชท</button>
+</div>
+<div class="iwrap">
+<div class="icon">
+<div class="imode"><button class="imb act">💬 แชท</button><button class="imb">💻 โค้ด</button></div>
+<textarea class="itxt" id="inp" placeholder="พิมพ์คำสั่ง หรือพิมพ์ /help เพื่อดูคำสั่ง Slash..." rows="1" onkeydown="hKey(event)" oninput="autoR(this)"></textarea>
+</div>
+<button class="sbtn" id="sBtn" onclick="doSend()">➤</button>
+<button class="sbtn" id="xBtn" onclick="stopProc()" style="display:none;background:var(--red)">⏹</button>
+</div>
+</div>
+</div>
+
+<div class="panel" id="filesP"><div class="sec"><h3>📁 ไฟล์โปรเจกต์จริง</h3><div style="margin-bottom:6px"><button class="tact" onclick="loadFiles()">🔄 รีเฟรช</button><span id="fCount" style="font-size:10px;color:var(--muted);margin-left:8px">กำลังโหลด...</span></div><div class="ftree" id="ftree"></div></div></div>
+<div class="panel" id="termP"><div class="sec"><h3>💻 เทอร์มินัลจริง</h3><div id="termC" style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;font-family:'Courier New',monospace;font-size:11px;line-height:1.6;min-height:250px"><div class="tline"><span class="tp">$</span><span class="tsuc">Terminal พร้อมใช้งาน (รันบนเครื่องจริง)</span></div><div id="tLines"></div></div><div style="display:flex;gap:6px;margin-top:6px"><input type="text" class="sel" id="tInp" placeholder="พิมพ์คำสั่ง shell..." style="flex:1" onkeydown="if(event.key==='Enter')runT()"><button class="tact pri" onclick="runT()">รัน</button></div></div></div>
+<div class="panel" id="setP"><div class="sec"><h3>⚙️ ตั้งค่า</h3><div class="row"><div class="lbl">Claude CLI Path<small>ตำแหน่งคำสั่ง Claude</small></div><input type="text" class="sel" id="cPath" value="claude" style="width:140px"></div><div class="row"><div class="lbl">Project Path<small>โฟลเดอร์ที่ Claude จะทำงานด้วย</small></div><input type="text" class="sel" id="projP" value="" style="width:240px"></div><div class="row click" onclick="reconnect()"><div class="lbl" style="color:var(--purple)">🔄 เชื่อมต่อใหม่<small>รีเฟรชการเชื่อมต่อกับเซิร์ฟเวอร์</small></div></div></div></div>
+</div>
+
+<div class="rp" id="rightP"><div class="rph"><span>💻 เทอร์มินัล</span><button class="rcbtn" onclick="toggleR()">✕</button></div><div class="tarea" id="rpT"><div class="tline"><span class="tp">❯</span><span class="tsuc">Terminal เชื่อมต่อเครื่องจริง</span></div><div id="rpL"></div><div class="til"><span class="tp">❯</span><input type="text" class="tinp" id="rpInp" placeholder="พิมพ์คำสั่ง..." onkeydown="if(event.key==='Enter')runRpT()"></div></div></div>
+
+<div class="sb"><div class="si"><div class="sdot" id="sDot"></div><span id="sText">กำลังเชื่อมต่อ...</span></div><div class="si" id="sProj">📁 ---</div><div class="si" id="sSes">Session: ใหม่</div><div class="sp"></div><div class="si" id="sNode">Node: ---</div><div class="si">Ctrl+B: Sidebar</div><div class="si">Ctrl+N: แชทใหม่</div></div>
+</main>
+</div>
+
+<div class="modal" id="helpM"><div class="mbox"><h3>📚 คำสั่ง Slash (/)</h3><p>พิมพ์ในช่องแชทแล้วกด Enter</p><ul><li><code>/clear</code> - ล้างหน้าจอแชท</li><li><code>/help</code> - แสดงคู่มือนี้</li><li><code>/run &lt;คำสั่ง&gt;</code> - รันคำสั่ง Shell จริง (เช่น <code>/run git status</code>)</li><li><code>/ls</code> - แสดงไฟล์ในโฟลเดอร์ปัจจุบัน</li><li><code>/cat &lt;ไฟล์&gt;</code> - อ่านเนื้อหาไฟล์ (เหมือน /read)</li><li><code>/read &lt;ไฟล์&gt;</code> - อ่านเนื้อหาไฟล์ (เช่น <code>/read package.json</code>)</li><li><code>/write &lt;ไฟล์&gt; &lt;เนื้อหา&gt;</code> - สร้าง/แก้ไขไฟล์</li><li><code>/git &lt;args&gt;</code> - รันคำสั่ง Git (เช่น <code>/git status</code>)</li><li><code>/npm &lt;args&gt;</code> - รันคำสั่ง NPM (เช่น <code>/npm install</code>)</li><li><code>/mkdir /rm /cp /mv /pwd /echo /touch</code> - คำสั่ง shell ทั่วไป</li><li><code>/list</code> หรือ <code>/files</code> - รีเฟรชรายการไฟล์โปรเจกต์</li></ul><p style="margin-top:10px;font-size:11px;color:var(--muted)">หมายเหตุ: คำสั่งที่ขึ้นต้นด้วย / จะไม่ส่งไป AI แต่จะเรียกทำงานบนเครื่องจริงทันที</p><div style="text-align:right;margin-top:12px"><button class="mbtn" onclick="closeM('helpM')">เข้าใจแล้ว</button></div></div></div>
+
+<div class="notif" id="notif"><span id="nI">✅</span><span id="nT">ข้อความ</span></div>
+
+<script>
+let ws,sid='s_'+Date.now(),procRun=false,proj={p:'',n:''},recAtt=0,currentStream='';
+const $=id=>document.getElementById(id);
+
+function conn(){
+  const url=`${location.protocol==='https:'?'wss:':'ws:'}//${location.host}`;
+  updateC('wait');
+  try{
+    ws=new WebSocket(url);
+    ws.onopen=()=>{recAtt=0;updateC('conn');$('cStat').innerHTML='<svg viewBox="0 0 8 8" fill="currentColor"><circle cx="4" cy="4" r="4"/></svg><span>เชื่อมต่อแล้ว</span>';noti('เชื่อมต่อเซิร์ฟเวอร์สำเร็จ','suc');$('xBtn').style.display='none';$('sBtn').style.display='flex'};
+    ws.onmessage=e=>{try{handleMsg(JSON.parse(e.data))}catch(err){console.error(err)}};
+    ws.onclose=()=>{updateC('disc');if(recAtt<10){recAtt++;setTimeout(conn,Math.min(1000*Math.pow(2,recAtt),20000))}else{$('helpM').classList.add('open')}};
+    ws.onerror=()=>updateC('disc');
+  }catch(e){updateC('disc')}
+}
+
+function handleMsg(d){
+  switch(d.type){
+    case 'system':
+      proj.p=d.data.projectPath;proj.n=d.data.projectName;
+      $('pName').textContent=d.data.projectName;$('pPath').textContent=d.data.projectPath;
+      $('tPath').textContent=d.data.projectPath;$('sProj').textContent='📁 '+d.data.projectName;
+      $('sNode').textContent='Node: '+d.data.nodeVersion;
+      $('projP').value=d.data.projectPath;loadFiles();break;
+    case 'stream':streamOut(d.data.text);break;
+    case 'complete':compOut(d.data);break;
+    case 'status':$('sText').textContent=d.data.message;break;
+    case 'error':handleErr(d.data);break;
+    case 'terminal_output':addTL(d.data.text,'out');break;
+    case 'terminal_error':addTL(d.data.text,'err');break;
+    case 'terminal_complete':addTL(`\n✅ เสร็จสิ้น (exit: ${d.data.code})`,'suc');break;
+    case 'file_list':drawTree(d.data.files);$('fCount').textContent=d.data.files.length+' รายการ';break;
+    case 'file_content':noti(`อ่านไฟล์ ${d.data.path} สำเร็จ`,'suc');addMsg('sys',`📖 เนื้อหาไฟล์ <code>${esc(d.data.path)}</code>:\n<pre><code>${esc(d.data.content)}</code></pre>`);break;
+    case 'file_written':noti(`เขียนไฟล์ ${d.data.path} สำเร็จ`,'suc');loadFiles();break;
+    case 'file_error':noti(`Error: ${d.data.error}`,'err');break;
+    case 'stderr':streamOut(d.data.text);break;
+  }
+}
+
+function updateC(s){
+  const st=$('cStat'),dot=$('sDot'),txt=$('sText');
+  if(s==='conn'){st.className='cstat conn';dot.className='sdot';txt.textContent='เชื่อมต่อแล้ว'}
+  else if(s==='disc'){st.className='cstat disc';dot.className='sdot red';txt.textContent='ไม่ได้เชื่อมต่อ'}
+  else{st.className='cstat conn';dot.className='sdot orange';txt.textContent='กำลังเชื่อมต่อ...'}
+}
+
+function send(txt){
+  if(!ws||ws.readyState!==1){noti('ไม่ได้เชื่อมต่อเซิร์ฟเวอร์','err');return}
+  if(!txt.trim())return;
+  const t=txt.trim();
+  if(t.startsWith('/')){execSlash(t);$('inp').value='';autoR($('inp'));return}
+  procRun=true;currentStream='';
+  const w=$('ws');if(w)w.style.display='none';
+  addMsg('user',esc(t));showTyp();
+  $('sBtn').style.display='none';$('xBtn').style.display='flex';$('sText').textContent='Claude กำลังทำงาน...';
+  ws.send(JSON.stringify({type:'chat',message:t,sessionId:sid,projectPath:$('projP').value||proj.p}));
+}
+
+function doSend(){send($('inp').value)}
+
+function parseArgs(str){
+  const args=[];let cur='',inQ=false;
+  for(let i=0;i<str.length;i++){
+    const ch=str[i];
+    if(ch==='"'||ch==="'"){inQ=!inQ;continue}
+    if(ch===' '&&!inQ){if(cur){args.push(cur);cur=''}}else{cur+=ch}
+  }
+  if(cur)args.push(cur);return args;
+}
+
+function execSlash(cmd){
+  const p=cmd.substring(1).split(' '),c=p[0].toLowerCase(),a=p.slice(1).join(' ');
+  switch(c){
+    case 'clear':$('msgs').innerHTML='<div class="ws" id="ws"><div class="wl">C</div><h2>แชทใหม่พร้อมใช้งาน!</h2><p>พิมพ์คำสั่งหรือคลิกปุ่มด้านบน</p></div>';noti('ล้างแชทแล้ว','inf');break;
+    case 'help':$('helpM').classList.add('open');break;
+    case 'run':case 'exec':case 'cmd':if(!a){noti('กรุณาระบุคำสั่ง เช่น /run ls -la','inf');break}noti(`กำลังรัน: ${a}`,'inf');runShell(a);break;
+    case 'read':if(!a){noti('กรุณาระบุไฟล์ เช่น /read package.json','inf');break}noti(`กำลังอ่าน: ${a}`,'inf');reqFile(a);break;
+    case 'write':
+      const args=parseArgs(a);
+      if(args.length<2){noti('รูปแบบ: /write "ชื่อไฟล์" เนื้อหา','inf');break}
+      const f=args[0],cnt=args.slice(1).join(' ');
+      noti(`กำลังเขียน: ${f}`,'inf');
+      ws.send(JSON.stringify({type:'write_file',path:f,content:cnt,projectPath:$('projP').value||proj.p}));
+      break;
+    case 'git':runShell(`git ${a}`);break;
+    case 'npm':runShell(`npm ${a}`);break;
+    case 'node':runShell(`node ${a}`);break;
+    case 'ls':case 'dir':runShell(`ls ${a}`);break;
+    case 'cat':if(!a){noti('กรุณาระบุไฟล์ เช่น /cat package.json','inf');break}reqFile(a);break;
+    case 'mkdir':case 'rm':case 'cp':case 'mv':case 'pwd':case 'echo':case 'touch':case 'whoami':case 'which':case 'uname':
+      if(c==='pwd')runShell('pwd');
+      else if(!a){noti(`กรุณาระบุคำสั่งหลัง /${c} เช่น /${c} ...`,'inf');break}
+      else runShell(`${c} ${a}`);
+      break;
+    case 'list':case 'files':loadFiles();noti('รีเฟรชรายการไฟล์','inf');break;
+    default:noti(`ไม่รู้จักคำสั่ง /${c} พิมพ์ /help เพื่อดูรายการ`,'inf');break;
+  }
+}
+
+function runShell(c){
+  if(!ws||ws.readyState!==1)return;
+  addMsg('sys',`💻 รันคำสั่ง: <code>${esc(c)}</code>`);
+  ws.send(JSON.stringify({type:'terminal',command:c,projectPath:$('projP').value||proj.p}));
+}
+
+function reqFile(p){
+  if(!ws||ws.readyState!==1)return;
+  ws.send(JSON.stringify({type:'read_file',path:p,projectPath:$('projP').value||proj.p}));
+}
+
+function streamOut(t){
+  const ty=$('tyM');if(ty)ty.remove();
+  let sm=$('streamMsg');
+  if(!sm){const m=$('msgs');sm=document.createElement('div');sm.className='msg';sm.id='streamMsg';sm.innerHTML=`<div class="mav claude">C</div><div class="mcon"><div class="mhdr"><span class="msen">Claude</span><span class="mtime">กำลังทำงาน...</span></div><div class="mbody" id="streamB"></div></div>`;m.appendChild(sm)}
+  currentStream+=t;const b=$('streamB');if(b)b.innerHTML=fmt(currentStream);
+  $('msgs').scrollTop=$('msgs').scrollHeight;
+}
+
+function compOut(d){
+  procRun=false;const sm=$('streamMsg');if(sm){sm.id='';sm.querySelector('.mtime').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}
+  $('sBtn').style.display='flex';$('xBtn').style.display='none';$('sText').textContent='พร้อมใช้งาน';
+}
+
+function handleErr(d){
+  procRun=false;const ty=$('tyM');if(ty)ty.remove();
+  addMsg('sys',`⚠️ ${esc(d.message)}${d.hint?'<br><small style="color:var(--muted)">'+esc(d.hint)+'</small>':''}`);
+  $('sBtn').style.display='flex';$('xBtn').style.display='none';$('sText').textContent='เกิดข้อผิดพลาด';
+}
+
+function stopProc(){if(ws&&ws.readyState===1)ws.send(JSON.stringify({type:'stop',sessionId:sid}));procRun=false;$('sBtn').style.display='flex';$('xBtn').style.display='none';$('sText').textContent='หยุดโดยผู้ใช้'}
+
+function hKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend()}}
+function autoR(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,150)+'px'}
+function fmt(t){let s=esc(t);s=s.replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>');s=s.replace(/`([^`]+)`/g,'<code>$1</code>');s=s.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>');s=s.replace(/\n/g,'<br>');return s}
+function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function addMsg(role,html){
+  const m=document.createElement('div');m.className='msg';
+  const n=role==='claude'?'Claude':role==='user'?'คุณ':'ระบบ';
+  const av=role==='claude'?'C':role==='user'?'U':'S';
+  m.innerHTML=`<div class="mav ${role}">${av}</div><div class="mcon"><div class="mhdr"><span class="msen">${n}</span><span class="mtime">${new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}</span></div><div class="mbody">${html}</div></div>`;
+  $('msgs').appendChild(m);$('msgs').scrollTop=$('msgs').scrollHeight;
+}
+function showTyp(){
+  if($('tyM'))return;
+  const d=document.createElement('div');d.className='msg';d.id='tyM';
+  d.innerHTML=`<div class="mav claude">C</div><div class="mcon"><div class="mhdr"><span class="msen">Claude</span><span class="mtime">กำลังพิมพ์...</span></div><div class="typ"><span></span><span style="animation-delay:.2s"></span><span style="animation-delay:.4s"></span></div></div>`;
+  $('msgs').appendChild(d);$('msgs').scrollTop=$('msgs').scrollHeight;
+}
+function toggleS(){$('sidebar').classList.toggle('collapsed')}
+function toggleR(){$('rightP').classList.toggle('open')}
+function switchV(view,el){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('vis'));
+  const tp=$(view+'P');if(tp)tp.classList.add('vis');
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));
+  if(el)el.classList.add('act');
+  if(view==='files')loadFiles();
+}
+function newChat(){
+  $('msgs').innerHTML='<div class="ws" id="ws"><div class="wl">C</div><h2>แชทใหม่พร้อมใช้งาน!</h2><p>พิมพ์คำสั่งหรือคลิกปุ่มด้านบน</p></div>';
+  sid='s_'+Date.now();$('sSes').textContent='Session: ใหม่';noti('เริ่มแชทใหม่แล้ว','inf');
+}
+function loadFiles(){if(!ws||ws.readyState!==1)return;ws.send(JSON.stringify({type:'list_files',path:'',projectPath:$('projP').value||proj.p}))}
+function drawTree(files){
+  const c=$('ftree');c.innerHTML='';
+  files.forEach(f=>{
+    const d=document.createElement('div');d.className='fitem'+(f.isDirectory?' fold':'');
+    d.innerHTML=`<span class="ind">${f.isDirectory?'📁':'📄'}</span><span>${esc(f.name)}</span>`;
+    d.onclick=()=>{if(!f.isDirectory)reqFile(f.path);};
+    c.appendChild(d);
+  });
+}
+function runT(){
+  const v=$('tInp').value.trim();if(!v)return;
+  addTL('$ '+v,'tp');runShell(v);$('tInp').value='';
+}
+function runRpT(){
+  const v=$('rpInp').value.trim();if(!v)return;
+  const l=document.createElement('div');l.className='tline';l.innerHTML=`<span class="tp">❯</span><span class="tc">${esc(v)}</span>`;$('rpL').appendChild(l);
+  runShell(v);$('rpInp').value='';$('rpT').scrollTop=$('rpT').scrollHeight;
+}
+function addTL(text,type){
+  const l=document.createElement('div');l.className='tline';
+  l.innerHTML=`<span class="${type}">${esc(text)}</span>`;$('tLines').appendChild(l);
+  $('termC').scrollTop=$('termC').scrollHeight;
+}
+function reconnect(){if(ws)ws.close();conn();noti('กำลังเชื่อมต่อใหม่...','inf')}
+function showModal(id){$(id).classList.add('open')}
+function closeM(id){$(id).classList.remove('open')}
+function noti(text,type){
+  const n=$('notif');$('nT').textContent=text;
+  n.className='notif show '+(type||'inf');
+  setTimeout(()=>n.classList.remove('show'),3000);
+}
+
+window.addEventListener('keydown',e=>{
+  if(e.ctrlKey&&e.key==='b'){e.preventDefault();toggleS()}
+  if(e.ctrlKey&&e.key==='n'){e.preventDefault();newChat()}
+});
+
+document.addEventListener('DOMContentLoaded',conn);
+</script>
+</body>
+</html>
