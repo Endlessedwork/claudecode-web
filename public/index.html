@@ -603,7 +603,8 @@ function handleMsg(d){
       $('pName').textContent=d.data.projectName;$('pPath').textContent=d.data.projectPath;
       $('tPath').textContent=d.data.projectPath;$('sProj').textContent=d.data.projectName;
       $('sNode').textContent='Node '+d.data.nodeVersion;
-      $('projP').value=d.data.projectPath;loadFiles();break;
+      $('projP').value=d.data.projectPath;loadFiles();
+      safeSend({type:'load_history',sessionId:sid});break;
     case 'stream':streamOut(d.data.text);break;
     case 'complete':compOut(d.data);break;
     case 'status':$('sText').textContent=d.data.message;break;
@@ -619,6 +620,9 @@ function handleMsg(d){
     case 'pty_output':if(term)term.write(d.data.text);break;
     case 'pty_ready':noti('Claude Interactive ready','suc');break;
     case 'pty_exit':noti('Claude Interactive stopped (exit: '+d.data.code+')','inf');stopPTYUI();break;
+    case 'history':renderHistory(d.data.messages);break;
+    case 'sessions':console.log('Sessions:',d.data.sessions);break;
+    case 'session_deleted':noti('Session deleted','inf');break;
   }
 }
 
@@ -726,6 +730,17 @@ function addMsg(role,html){
   const time=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
   m.innerHTML='<div class="message__avatar message__avatar--'+role+'">'+av+'</div><div class="message__content"><div class="message__header"><span class="message__sender">'+n+'</span><span class="message__time">'+time+'</span></div><div class="message__body">'+html+'</div></div>';
   $('msgs').appendChild(m);$('msgs').scrollTop=$('msgs').scrollHeight;
+}
+
+function renderHistory(messages){
+  if(!messages||messages.length===0)return;
+  const w=$('ws');if(w)w.style.display='none';
+  messages.forEach(msg=>{
+    const role=msg.role;
+    if(role==='user')addMsg('user',esc(msg.content));
+    else if(role==='assistant')addMsg('claude',fmt(msg.content));
+    else addMsg('sys',esc(msg.content));
+  });
 }
 
 function showTyp(){

@@ -9,6 +9,7 @@ const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const pty = require('node-pty');
+const Database = require('better-sqlite3');
 
 const app = express();
 const server = http.createServer(app);
@@ -17,6 +18,57 @@ const wss = new WebSocket.Server({ server });
 app.use(express.static(path.join(__dirname, 'public')));
 
 const activeSessions = new Map();
+
+// SQLite setup
+const db = new Database(path.join(__dirname, 'chat.db'));
+db.exec(`
+  CREATE TABLE IF NOT EXISTS sessions (
+    id TEXT PRIMARY KEY,
+    project_path TEXT NOT NULL,
+    title TEXT,
+    created_at INTEGER DEFAULT (unixepoch())
+  );
+  CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    session_id TEXT NOT NULL,
+    role TEXT NOT NULL,
+    content TEXT NOT NULL,
+    created_at INTEGER DEFAULT (unixepoch()),
+    FOREIGN KEY (session_id) REFERENCES sessions(id) ON DELETE CASCADE
+  );
+  CREATE INDEX IF NOT EXISTS idx_messages_session ON messages(session_id, created_at);
+`);
+
+function ensureSession(sessionId, projectPath) {
+  const existing = db.prepare('SELECT id FROM sessions WHERE id = ?').get(sessionId);
+  if (!existing) {
+    db.prepare('INSERT INTO sessions (id, project_path, title) VALUES (?, ?, ?)').run(sessionId, projectPath, 'New Chat');
+  }
+}
+
+function saveMessage(sessionId, role, content) {
+  db.prepare('INSERT INTO messages (session_id, role, content) VALUES (?, ?, ?)').run(sessionId, role, content);
+}
+
+function getHistory(sessionId, limit = 200) {
+  return db.prepare(
+    'SELECT role, content, created_at FROM messages WHERE session_id = ? ORDER BY created_at ASC LIMIT ?'
+  ).all(sessionId, limit);
+}
+
+function updateSessionTitle(sessionId, title) {
+  db.prepare('UPDATE sessions SET title = ? WHERE id = ?').run(title.slice(0, 100), sessionId);
+}
+
+function getSessions(projectPath) {
+  return db.prepare(
+    'SELECT id, title, created_at FROM sessions WHERE project_path = ? ORDER BY created_at DESC LIMIT 50'
+  ).all(projectPath);
+}
+
+function deleteSession(sessionId) {
+  db.prepare('DELETE FROM sessions WHERE id = ?').run(sessionId);
+}
 
 function isSafePath(projectPath, targetPath) {
   const resolved = path.resolve(projectPath, targetPath);
@@ -39,9 +91,11 @@ wss.on('connection', (ws) => {
 
   ws.on('message', (msg) => {
     try {
-      const data = JSON.parse(msg);
+      const text = Buffer.isBuffer(msg) ? msg.toString('utf8') : msg;
+      const data = JSON.parse(text);
       handleMessage(ws, data);
     } catch (e) {
+      console.error('JSON parse error:', e.message, 'raw:', msg.toString ? msg.toString() : msg);
       ws.send(JSON.stringify({ type: 'error', data: { message: 'รูปแบบข้อมูลไม่ถูกต้อง' } }));
     }
   });
@@ -76,6 +130,9 @@ function handleMessage(ws, data) {
     case 'stop': handleStop(ws, data); break;
     case 'pty_input': handlePTYInput(ws, data); break;
     case 'pty_resize': handlePTYResize(ws, data); break;
+    case 'load_history': handleLoadHistory(ws, data); break;
+    case 'list_sessions': handleListSessions(ws, data, projectPath); break;
+    case 'delete_session': handleDeleteSession(ws, data); break;
     default: ws.send(JSON.stringify({ type: 'error', data: { message: `ไม่รู้จักคำสั่ง: ${data.type}` } }));
   }
 }
@@ -83,6 +140,17 @@ function handleMessage(ws, data) {
 function handleChat(ws, data, projectPath) {
   const sessionId = data.sessionId || 'default';
   const session = activeSessions.get(sessionId);
+  
+  // Save user message
+  if (data.message && data.message.trim()) {
+    ensureSession(sessionId, projectPath);
+    saveMessage(sessionId, 'user', data.message.trim());
+    // Auto-update title from first user message
+    const count = db.prepare('SELECT COUNT(*) as c FROM messages WHERE session_id = ?').get(sessionId).c;
+    if (count === 1) {
+      updateSessionTitle(sessionId, data.message.trim().slice(0, 60));
+    }
+  }
   
   // If PTY session exists, send input to it
   if (session && session.isPTY && session.process) {
@@ -126,6 +194,7 @@ function handleChat(ws, data, projectPath) {
 
   proc.on('close', code => {
     activeSessions.delete(sessionId);
+    saveMessage(sessionId, 'assistant', buffer);
     ws.send(JSON.stringify({ type: 'complete', data: { output: buffer, code, sessionId } }));
   });
 
@@ -239,6 +308,22 @@ function handleListFiles(ws, data, projectPath) {
 function handleStop(ws, data) {
   const session = activeSessions.get(data.sessionId || 'default');
   if (session?.process) session.process.kill();
+}
+
+function handleLoadHistory(ws, data) {
+  const sessionId = data.sessionId || 'default';
+  const rows = getHistory(sessionId, data.limit || 200);
+  ws.send(JSON.stringify({ type: 'history', data: { sessionId, messages: rows } }));
+}
+
+function handleListSessions(ws, data, projectPath) {
+  const rows = getSessions(projectPath);
+  ws.send(JSON.stringify({ type: 'sessions', data: { sessions: rows } }));
+}
+
+function handleDeleteSession(ws, data) {
+  deleteSession(data.sessionId);
+  ws.send(JSON.stringify({ type: 'session_deleted', data: { sessionId: data.sessionId } }));
 }
 
 const PORT = process.env.PORT || 3003;
