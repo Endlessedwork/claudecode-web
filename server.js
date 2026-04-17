@@ -137,6 +137,33 @@ function handleMessage(ws, data) {
   }
 }
 
+function buildContextPrompt(sessionId, currentMessage, maxChars = 40000) {
+  const rows = getHistory(sessionId, 50);
+  if (!rows || rows.length === 0) return currentMessage;
+  
+  // Exclude the current message that was just saved
+  const past = rows.filter(r => r.content !== currentMessage.trim());
+  
+  let context = 'The following is the conversation history. Please respond based on this context.\n\n';
+  for (const row of past) {
+    const label = row.role === 'user' ? 'User' : row.role === 'assistant' ? 'Assistant' : 'System';
+    context += `${label}: ${row.content}\n`;
+  }
+  context += `\nUser: ${currentMessage}`;
+  
+  if (context.length > maxChars) {
+    // Fallback: take only last N messages
+    const recent = past.slice(-20);
+    context = 'The following is the recent conversation history. Please respond based on this context.\n\n';
+    for (const row of recent) {
+      const label = row.role === 'user' ? 'User' : row.role === 'assistant' ? 'Assistant' : 'System';
+      context += `${label}: ${row.content}\n`;
+    }
+    context += `\nUser: ${currentMessage}`;
+  }
+  return context;
+}
+
 function handleChat(ws, data, projectPath) {
   const sessionId = data.sessionId || 'default';
   const session = activeSessions.get(sessionId);
@@ -170,8 +197,9 @@ function handleChat(ws, data, projectPath) {
 
   ws.send(JSON.stringify({ type: 'status', data: { status: 'starting', message: 'กำลังเรียก Claude...' } }));
 
+  const prompt = buildContextPrompt(sessionId, data.message || '');
   const cliCmd = process.env.CLAUDE_CMD || 'claude';
-  const proc = spawn(cliCmd, ['--print', data.message], {
+  const proc = spawn(cliCmd, ['--print', prompt], {
     cwd: projectPath,
     env: { ...process.env, FORCE_COLOR: '0', CLICOLOR_FORCE: '0' },
     stdio: ['ignore', 'pipe', 'pipe']
