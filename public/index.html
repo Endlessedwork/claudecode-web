@@ -645,6 +645,7 @@ function send(txt){
   procRun=true;currentStream='';
   const w=$('ws');if(w)w.style.display='none';
   addMsg('user',esc(t));showTyp();
+  $('inp').value='';autoR($('inp'));
   $('sBtn').style.display='none';$('xBtn').style.display='flex';
   safeSend({type:'chat',message:t,sessionId:sid,projectPath:$('projP').value||proj.p});
 }
