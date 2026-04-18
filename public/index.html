@@ -36,6 +36,22 @@
   --topbar-height:56px;
   --bottom-nav-height:64px;
 }
+[data-theme="light"]{
+  --color-bg:#F9FAFB;
+  --color-surface:#FFFFFF;
+  --color-surface-elevated:#F3F4F6;
+  --color-border:#E5E7EB;
+  --color-border-subtle:#F3F4F6;
+  --color-text:#111827;
+  --color-text-secondary:#4B5563;
+  --color-text-muted:#9CA3AF;
+  --color-brand:#7C3AED;
+  --color-brand-hover:#6D28D9;
+  --color-success:#16A34A;
+  --color-warning:#D97706;
+  --color-danger:#DC2626;
+  --color-info:#2563EB;
+}
 
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden}
@@ -313,6 +329,10 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
         <span class="status-badge__dot"></span>
         <span>Offline</span>
       </div>
+      <button class="btn btn--secondary" onclick="chooseFolder()" title="Open project folder">
+        <svg class="icon icon--sm" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M19.5 21a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3h-5.379a.75.75 0 0 1-.53-.22L11.47 3.66A2.25 2.25 0 0 0 9.879 3H4.5a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h15ZM9 12.75a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5h-6Z" clip-rule="evenodd"/></svg>
+        <span class="hide-sm">Open</span>
+      </button>
       <button class="btn btn--primary" onclick="newChat()">
         <svg class="icon icon--sm" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"/></svg>
         <span class="hide-sm">New Chat</span>
@@ -350,6 +370,10 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
             <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2.25 5.25a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3V15a3 3 0 0 1-3 3h-3v.257c0 .597.237 1.17.659 1.591l.621.622a.75.75 0 0 1-.53 1.28h-9a.75.75 0 0 1-.53-1.28l.621-.622a2.25 2.25 0 0 0 .659-1.591V18h-3a3 3 0 0 1-3-3V5.25Zm1.5 0v9.75a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V5.25a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5Z" clip-rule="evenodd"/></svg>
             <span class="sidebar__item-text">Interactive</span>
           </div>
+        </div>
+        <div class="sidebar__section" id="histSec">
+          <div class="sidebar__label">History</div>
+          <div id="histList" style="display:flex;flex-direction:column;gap:2px"></div>
         </div>
         <div class="sidebar__section">
           <div class="sidebar__label">System</div>
@@ -490,6 +514,14 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
             <div class="setting-label">Project Path <small>Working directory for Claude</small></div>
             <input type="text" class="setting-input" id="projP" value="" style="max-width:320px">
           </div>
+          <div class="setting-row">
+            <div class="setting-label">Theme <small>Choose your preferred appearance</small></div>
+            <select class="setting-input" id="themeSel" onchange="setTheme(this.value)" style="max-width:140px">
+              <option value="dark">Dark</option>
+              <option value="light">Light</option>
+              <option value="auto">Auto</option>
+            </select>
+          </div>
           <div class="setting-row" style="cursor:pointer" onclick="reconnect()">
             <div class="setting-label" style="color:var(--color-brand)">Reconnect <small>Refresh WebSocket connection to server</small></div>
             <svg class="icon icon--lg" style="color:var(--color-brand)" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4.755 10.059a7.5 7.5 0 0 1 12.548-3.364l1.903 1.903h-3.183a.75.75 0 1 0 0 1.5h4.992a.75.75 0 0 0 .75-.75V4.356a.75.75 0 0 0-1.5 0v3.18l-1.9-1.9A9 9 0 0 0 3.306 9.67c.09.281.261.38.53.316.27-.064.45-.227.45-.53v-.397ZM2.25 12a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H3a.75.75 0 0 1-.75-.75V12Zm6 0a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75V12Zm6 0a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75V12Zm-9.75 3a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H3a.75.75 0 0 1-.75-.75v-.008Zm6 0a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75H9a.75.75 0 0 1-.75-.75v-.008Zm6 0a.75.75 0 0 1 .75-.75h.008a.75.75 0 0 1 .75.75v.008a.75.75 0 0 1-.75.75h-.008a.75.75 0 0 1-.75-.75v-.008ZM4.755 13.941a7.5 7.5 0 0 0 12.548 3.364l1.903-1.903h-3.183a.75.75 0 1 1 0-1.5h4.992a.75.75 0 0 1 .75.75v4.992a.75.75 0 0 1-1.5 0v-3.18l-1.9 1.9A9 9 0 0 1 3.306 14.33c-.09-.281-.261-.38-.53-.316-.27.064-.45.227-.45.53v.397Z" clip-rule="evenodd"/></svg>
@@ -576,6 +608,7 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
 <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
 <script>
 let ws,sid='s_'+Date.now(),procRun=false,proj={p:'',n:''},recAtt=0,currentStream='';
+let chatMode='chat',filePath='',pendingFileView=null;
 let term=null,fitAddon=null,ptyActive=false;
 const $=id=>document.getElementById(id);
 
@@ -595,7 +628,7 @@ function conn(){
     ws=new WebSocket(url);
     ws.onopen=()=>{recAtt=0;updateC('conn');$('cStat').innerHTML='<span class="status-badge__dot"></span><span>Online</span>';$('cStat').className='status-badge status-badge--online';$('xBtn').style.display='none';$('sBtn').style.display='flex'};
     ws.onmessage=e=>{try{handleMsg(JSON.parse(e.data))}catch(err){console.error(err)}};
-    ws.onclose=()=>{updateC('disc');if(recAtt<10){recAtt++;setTimeout(conn,Math.min(1000*Math.pow(2,recAtt),20000))}else{$('helpM').classList.add('modal--open')}};
+    ws.onclose=()=>{resetUI();updateC('disc');if(recAtt<10){recAtt++;setTimeout(conn,Math.min(1000*Math.pow(2,recAtt),20000))}else{$('helpM').classList.add('modal--open')}};
     ws.onerror=()=>updateC('disc');
   }catch(e){updateC('disc')}
 }
@@ -604,11 +637,14 @@ function handleMsg(d){
   switch(d.type){
     case 'system':
       proj.p=d.data.projectPath;proj.n=d.data.projectName;
-      $('pName').textContent=d.data.projectName;$('pPath').textContent=d.data.projectPath;
-      $('tPath').textContent=d.data.projectPath;$('sProj').textContent=d.data.projectName;
-      $('sNode').textContent='Node '+d.data.nodeVersion;
-      $('projP').value=d.data.projectPath;loadFiles();
-      safeSend({type:'load_history',sessionId:sid});break;
+      const pn=$('pName');if(pn)pn.textContent=d.data.projectName;
+      const pp=$('pPath');if(pp)pp.textContent=d.data.projectPath;
+      const tp=$('tPath');if(tp)tp.textContent=d.data.projectPath;
+      const pr=$('projP');if(pr)pr.value=d.data.projectPath;
+      loadFiles();
+      safeSend({type:'load_history',sessionId:sid});
+      safeSend({type:'list_sessions',projectPath:$('projP').value||proj.p});
+      break;
     case 'stream':streamOut(d.data.text);break;
     case 'complete':compOut(d.data);break;
     case 'status':$('sText').textContent=d.data.message;break;
@@ -616,8 +652,17 @@ function handleMsg(d){
     case 'terminal_output':addTL(d.data.text,'terminal-out');break;
     case 'terminal_error':addTL(d.data.text,'terminal-err');break;
     case 'terminal_complete':addTL('\nDone (exit: '+d.data.code+')','terminal-suc');break;
-    case 'file_list':drawTree(d.data.files);$('fCount').textContent=d.data.files.length+' items';break;
-    case 'file_content':noti('Read '+d.data.path+' success','suc');addMsg('sys','<svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625ZM7.5 15a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 7.5 15Zm.75-2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" clip-rule="evenodd"/></svg> File <code>'+esc(d.data.path)+'</code>:<pre><code>'+esc(d.data.content)+'</code></pre>');break;
+    case 'file_list':drawTree(d.data.files);if(!filePath)$('fCount').textContent=d.data.files.length+' items';break;
+    case 'file_content':
+      lastFileMeta={size:d.data.size,mtime:d.data.mtime,mode:d.data.mode};
+      if(pendingFileView==='modal'){
+        showFileModal(d.data.path,d.data.content);
+        pendingFileView=null;
+      }else{
+        noti('Read '+d.data.path+' success','suc');
+        addMsg('sys','<svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625ZM7.5 15a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 7.5 15Zm.75-2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" clip-rule="evenodd"/></svg> File <code>'+esc(d.data.path)+'</code>:<pre><code>'+esc(d.data.content)+'</code></pre>');
+      }
+      break;
     case 'file_written':noti('Wrote '+d.data.path+' success','suc');loadFiles();break;
     case 'file_error':noti('Error: '+d.data.error,'err');break;
     case 'stderr':streamOut(d.data.text);break;
@@ -625,7 +670,10 @@ function handleMsg(d){
     case 'pty_ready':noti('Claude Interactive ready','suc');break;
     case 'pty_exit':noti('Claude Interactive stopped (exit: '+d.data.code+')','inf');stopPTYUI();break;
     case 'history':renderHistory(d.data.messages);break;
-    case 'sessions':console.log('Sessions:',d.data.sessions);break;
+    case 'sessions':renderSessions(d.data.sessions);break;
+    case 'stopped':resetUI();noti('Stopped','inf');break;
+    case 'folder_selected':setProject(d.data.path);break;
+    case 'folder_cancelled':noti('Folder selection cancelled','inf');break;
     case 'session_deleted':noti('Session deleted','inf');break;
   }
 }
@@ -647,7 +695,7 @@ function send(txt){
   addMsg('user',esc(t));showTyp();
   $('inp').value='';autoR($('inp'));
   $('sBtn').style.display='none';$('xBtn').style.display='flex';
-  safeSend({type:'chat',message:t,sessionId:sid,projectPath:$('projP').value||proj.p});
+  safeSend({type:'chat',message:t,sessionId:sid,projectPath:$('projP').value||proj.p,mode:chatMode});
 }
 
 function doSend(){send($('inp').value)}
@@ -697,9 +745,17 @@ function runShell(c){
   safeSend({type:'terminal',command:c,projectPath:$('projP').value||proj.p});
 }
 
-function reqFile(p){
+function reqFile(p,view){
   if(!ws||ws.readyState!==1)return;
+  pendingFileView=view||null;
   safeSend({type:'read_file',path:p,projectPath:$('projP').value||proj.p});
+}
+
+function resetUI(){
+  procRun=false;
+  $('sBtn').style.display='flex';
+  $('xBtn').style.display='none';
+  const ty=$('tyM');if(ty)ty.remove();
 }
 
 function streamOut(t){
@@ -711,21 +767,74 @@ function streamOut(t){
 }
 
 function compOut(d){
-  procRun=false;const sm=$('streamMsg');if(sm){sm.id='';sm.querySelector('.message__time').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}
-  $('sBtn').style.display='flex';$('xBtn').style.display='none';
+  resetUI();
+  const sm=$('streamMsg');if(sm){sm.id='';sm.querySelector('.message__time').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}
 }
 
 function handleErr(d){
-  procRun=false;const ty=$('tyM');if(ty)ty.remove();
+  resetUI();
   addMsg('sys','<svg class="icon" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg> '+esc(d.message)+(d.hint?'<br><small style="color:var(--color-text-muted)">'+esc(d.hint)+'</small>':''));
-  $('sBtn').style.display='flex';$('xBtn').style.display='none';
 }
 
-function stopProc(){safeSend({type:'stop',sessionId:sid});procRun=false;$('sBtn').style.display='flex';$('xBtn').style.display='none';}
+function stopProc(){safeSend({type:'stop',sessionId:sid});resetUI();}
 
 function hKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend()}}
 function autoR(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,140)+'px'}
-function fmt(t){let s=esc(t);s=s.replace(/```([\s\S]*?)```/g,'<pre><code>$1</code></pre>');s=s.replace(/`([^`]+)`/g,'<code>$1</code>');s=s.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>');s=s.replace(/\n/g,'<br>');return s}
+function fmt(t){
+  const placeholders=[];
+  const save=c=>{placeholders.push(c);return`<<<PH${placeholders.length-1}>>>`};
+  // Preserve code blocks
+  let s=t.replace(/```([\s\S]*?)```/g,(m,code)=>save(`<pre><code>${esc(code)}</code></pre>`));
+  // Escape HTML
+  s=esc(s);
+  // Inline code
+  s=s.replace(/`([^`]+)`/g,'<code>$1</code>');
+  // Bold & italic
+  s=s.replace(/\*\*(.*?)\*\*/g,'<b>$1</b>');
+  s=s.replace(/\*(.*?)\*/g,'<i>$1</i>');
+  // Links
+  s=s.replace(/\[([^\]]+)\]\(([^)]+)\)/g,'<a href="$2" target="_blank" style="color:var(--color-brand);text-decoration:underline">$1</a>');
+  // Lists & blockquotes (line by line)
+  const lines=s.split('\n');
+  const out=[];
+  let inList=null;
+  for(let i=0;i<lines.length;i++){
+    const line=lines[i];
+    if(line.includes('<<<PH')){
+      if(inList){out.push(`</${inList}>`);inList=null}
+      out.push(line);continue
+    }
+    const bullet=line.match(/^(\s*)[-*]\s+(.*)$/);
+    const numbered=line.match(/^(\s*)\d+\.\s+(.*)$/);
+    const quote=line.match(/^(\s*)&gt;\s+(.*)$/);
+    if(bullet){
+      if(inList!=='ul'){if(inList)out.push(`</${inList}>`);out.push('<ul style="margin:4px 0;padding-left:20px">');inList='ul'}
+      out.push(`<li>${bullet[2]}</li>`);
+    }else if(numbered){
+      if(inList!=='ol'){if(inList)out.push(`</${inList}>`);out.push('<ol style="margin:4px 0;padding-left:20px">');inList='ol'}
+      out.push(`<li>${numbered[2]}</li>`);
+    }else if(quote){
+      if(inList){out.push(`</${inList}>`);inList=null}
+      out.push(`<blockquote style="border-left:3px solid var(--color-brand);padding-left:12px;margin:4px 0;color:var(--color-text-secondary)">${quote[2]}</blockquote>`);
+    }else{
+      if(inList){out.push(`</${inList}>`);inList=null}
+      out.push(line);
+    }
+  }
+  if(inList)out.push(`</${inList}>`);
+  s=out.join('\n');
+  // Newlines to <br>
+  s=s.replace(/\n/g,'<br>');
+  // Clean up extra <br> inside lists
+  s=s.replace(/(<ul[^>]*>)<br>/g,'$1');
+  s=s.replace(/<br>(<\/ul>)/g,'$1');
+  s=s.replace(/(<ol[^>]*>)<br>/g,'$1');
+  s=s.replace(/<br>(<\/ol>)/g,'$1');
+  s=s.replace(/(<\/li>)<br>(<li>)/g,'$1$2');
+  // Restore placeholders
+  s=s.replace(/&lt;&lt;&lt;PH(\d+)&gt;&gt;&gt;/g,(m,idx)=>placeholders[idx]);
+  return s
+}
 function esc(t){return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 
 function addMsg(role,html){
@@ -792,24 +901,79 @@ function switchV(view,el){
   if(view==='files')loadFiles();
 }
 
-function setMode(m){$('modeChat').classList.toggle('input-bar__mode--active',m==='chat');$('modeCode').classList.toggle('input-bar__mode--active',m==='code')}
+function setMode(m){chatMode=m;$('modeChat').classList.toggle('input-bar__mode--active',m==='chat');$('modeCode').classList.toggle('input-bar__mode--active',m==='code')}
 
 function newChat(){
   $('msgs').innerHTML='<div class="welcome" id="ws"><div class="welcome__logo">C</div><div class="welcome__title">New Chat Ready</div><div class="welcome__desc">Type a message or pick an action above</div></div>';
   sid='s_'+Date.now();noti('New chat started','inf');
+  safeSend({type:'list_sessions',projectPath:$('projP').value||proj.p});
 }
 
-function loadFiles(){if(!ws||ws.readyState!==1)return;safeSend({type:'list_files',path:'',projectPath:$('projP').value||proj.p})}
+function fmtSize(b){if(b<1024)return b+' B';if(b<1024*1024)return(b/1024).toFixed(1)+' KB';return(b/(1024*1024)).toFixed(1)+' MB'}
+function fmtDate(ms){return new Date(ms).toLocaleString('th-TH',{year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'})}
+
+function loadFiles(path){
+  if(!ws||ws.readyState!==1)return;
+  filePath=path||'';
+  safeSend({type:'list_files',path:filePath,projectPath:$('projP').value||proj.p});
+  drawBreadcrumb(filePath);
+}
+
+function drawBreadcrumb(path){
+  const c=$('fCount');
+  if(!path){c.textContent='Project root';return}
+  const parts=path.split('/').filter(Boolean);
+  let html='<span style="cursor:pointer;color:var(--color-brand)" onclick="loadFiles(\'\')">root</span>';
+  let build='';
+  parts.forEach((p,i)=>{
+    build+=p;
+    html+=' / '+(i===parts.length-1?'<span style="color:var(--color-text)">'+esc(p)+'</span>':'<span style="cursor:pointer;color:var(--color-brand)" onclick="loadFiles(\''+esc(build)+'\')">'+esc(p)+'</span>');
+    build+='/';
+  });
+  c.innerHTML=html;
+}
+
+function renderSessions(sessions){
+  const c=$('histList');c.innerHTML='';
+  if(!sessions||sessions.length===0){c.innerHTML='<div style="padding:6px 10px;font-size:12px;color:var(--color-text-muted)">No history yet</div>';return}
+  sessions.forEach(s=>{
+    const d=document.createElement('div');d.className='sidebar__item';d.style.padding='8px 10px';
+    d.innerHTML='<svg class="icon icon--sm" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4.804 21.644A6.707 6.707 0 0 0 6 21.75a6.721 6.721 0 0 0 3.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 0 1-.814 1.686.75.75 0 0 0 .44 1.223ZM8.25 10.875a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25ZM10.875 12a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875-1.125a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25Z" clip-rule="evenodd"/></svg><span class="sidebar__item-text" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(s.title||'Untitled')+'</span><button class="btn btn--ghost btn--icon-sm" style="margin-left:auto;opacity:0" onclick="event.stopPropagation();delS(\''+s.id+'\')" title="Delete"><svg class="icon icon--sm" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 0 1 3.878.512.75.75 0 1 1-.256 1.478l-.209-.035-1.005 13.07a3 3 0 0 1-2.991 2.77H8.084a3 3 0 0 1-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 0 1-.256-1.478A48.567 48.567 0 0 1 7.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.923a49.19 49.19 0 0 1 3.368 0c1.603.023 2.816 1.359 2.816 2.923ZM10.5 6v.75a.75.75 0 0 0 .75.75h1.5a.75.75 0 0 0 .75-.75V6a.75.75 0 0 0-.75-.75h-1.5A.75.75 0 0 0 10.5 6Zm-1.2 13.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5h-3a.75.75 0 0 1-.75-.75Zm.75-3.75a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" clip-rule="evenodd"/></svg></button>';
+    d.onclick=()=>switchSession(s.id);
+    d.onmouseenter=()=>{const b=d.querySelector('button');if(b)b.style.opacity='1'};
+    d.onmouseleave=()=>{const b=d.querySelector('button');if(b)b.style.opacity='0'};
+    c.appendChild(d);
+  });
+}
+
+function switchSession(id){
+  sid=id;
+  $('msgs').innerHTML='<div class="welcome" id="ws"><div class="welcome__logo">C</div><div class="welcome__title">Loading...</div><div class="welcome__desc">Restoring chat history</div></div>';
+  safeSend({type:'load_history',sessionId:sid});
+  noti('Switched session','inf');
+}
+
+function delS(id){
+  if(!confirm('Delete this session?'))return;
+  safeSend({type:'delete_session',sessionId:id});
+}
 
 function drawTree(files){
   const c=$('ftree');c.innerHTML='';
+  if(filePath){
+    const up=document.createElement('div');up.className='file-item';
+    up.innerHTML='<span class="file-item__ind"><svg class="icon" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M9.53 2.47a.75.75 0 0 0-1.06 0L4.78 6.16a.75.75 0 0 0 0 1.06l3.69 3.69a.75.75 0 1 0 1.06-1.06l-2.47-2.47H18a.75.75 0 0 0 0-1.5H6.81l2.47-2.47a.75.75 0 0 0 0-1.06Z" clip-rule="evenodd"/></svg></span><span style="color:var(--color-text-secondary)">..</span>';
+    up.onclick=()=>{const p=filePath.split('/').filter(Boolean);p.pop();loadFiles(p.join('/'))};
+    c.appendChild(up);
+  }
   files.forEach(f=>{
     const d=document.createElement('div');d.className='file-item'+(f.isDirectory?' file-item--folder':'');
     d.innerHTML='<span class="file-item__ind">'+(f.isDirectory?
       '<svg class="icon" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M19.5 21a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3h-5.379a.75.75 0 0 1-.53-.22L11.47 3.66A2.25 2.25 0 0 0 9.879 3H4.5a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h15Z" clip-rule="evenodd"/></svg>':
       '<svg class="icon" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625ZM7.5 15a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 7.5 15Zm.75-2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" clip-rule="evenodd"/></svg>')+
       '</span><span>'+esc(f.name)+'</span>';
-    d.onclick=()=>{if(!f.isDirectory)reqFile(f.path);};
+    d.innerHTML+='<span style="margin-left:auto;display:flex;gap:12px;align-items:center;font-size:11px;color:var(--color-text-muted)">'+(f.size!==undefined&&!f.isDirectory?'<span>'+fmtSize(f.size)+'</span>':'')+(f.mtime?'<span>'+fmtDate(f.mtime)+'</span>':'')+'</span>';
+    d.onclick=()=>{if(f.isDirectory){loadFiles(f.path)}else{reqFile(f.path,'modal')}};
     c.appendChild(d);
   });
 }
@@ -929,12 +1093,187 @@ function showLogModal(text){
   m.classList.add('modal--open');
 }
 
+let lastFileMeta=null,lastFilePath='',lastFileContent='';
+
+function showFileModal(path,content){
+  lastFilePath=path;lastFileContent=content;
+  const id='fileModal';
+  let m=$(id);
+  if(!m){
+    m=document.createElement('div');m.id=id;m.className='modal';
+    m.innerHTML=`<div class="modal__box" style="max-width:900px;height:80vh;display:flex;flex-direction:column;padding:0;overflow:hidden">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 20px;border-bottom:1px solid var(--color-border-subtle);gap:12px;flex-wrap:wrap">
+        <div style="min-width:0">
+          <h3 class="modal__title" id="fmTitle" style="margin:0;font-size:14px;font-family:monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">File</h3>
+          <div id="fmMeta" style="font-size:11px;color:var(--color-text-muted);margin-top:4px;font-family:monospace"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-shrink:0">
+          <button class="btn btn--secondary btn--icon-sm" id="fmCopy" onclick="copyFileContent()" title="Copy all">
+            <svg class="icon icon--sm" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M17.663 3.118c.225.015.45.032.673.05C19.876 3.298 21 4.407 21 5.91V16.09c0 1.503-1.124 2.612-2.664 2.742a41.369 41.369 0 0 1-.622.052c-.282.023-.513.046-.744.08M20.25 5.91V16.09c0 1.503-1.124 2.612-2.664 2.742a41.369 41.369 0 0 1-.622.052c-.282.023-.513.046-.744.08M16.91 19.664c-.225.015-.45.032-.673.05a41.1 41.1 0 0 1-8.19 0 1.704 1.704 0 0 1-.672-.05c-1.54-.13-2.664-1.24-2.664-2.742V5.91c0-1.503 1.124-2.612 2.664-2.742a41.094 41.094 0 0 1 8.19 0c.223.018.448.035.672.05 1.54.13 2.664 1.24 2.664 2.742v11.18c0 1.503-1.124 2.612-2.664 2.742ZM8.25 9a.75.75 0 0 0 0 1.5h7.5a.75.75 0 0 0 0-1.5h-7.5Zm0 3a.75.75 0 0 0 0 1.5h7.5a.75.75 0 0 0 0-1.5h-7.5Zm0 3a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" clip-rule="evenodd"/></svg>
+          </button>
+          <button class="btn btn--secondary" id="fmEditBtn" onclick="toggleFileEdit()" style="padding:6px 12px;font-size:12px">
+            <span id="fmEditText">Edit</span>
+          </button>
+          <button class="btn btn--primary" id="fmSaveBtn" onclick="saveFile()" style="padding:6px 12px;font-size:12px;display:none">
+            Save
+          </button>
+          <button class="btn btn--ghost btn--icon-sm" onclick="closeFileModal()">
+            <svg class="icon" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd"/></svg>
+          </button>
+        </div>
+      </div>
+      <div id="fmView" style="flex:1;overflow:auto;background:var(--color-bg);display:flex;font-family:'SF Mono',Monaco,'Courier New',monospace;font-size:12px;line-height:1.7">
+        <div id="fmLines" style="padding:16px 8px 16px 20px;color:var(--color-text-muted);text-align:right;user-select:none;flex-shrink:0;border-right:1px solid var(--color-border-subtle);background:var(--color-surface)"></div>
+        <pre id="fmPre" style="flex:1;margin:0;padding:16px 20px;white-space:pre-wrap;word-break:break-all;overflow:auto"></pre>
+      </div>
+      <div id="fmEditorWrap" style="display:none;flex:1;flex-direction:column;min-height:0;height:100%"><textarea id="fmEditor" style="flex:1;width:100%;height:100%;background:var(--color-bg);color:var(--color-text);border:none;outline:none;padding:16px 20px;font-family:'SF Mono',Monaco,'Courier New',monospace;font-size:12px;line-height:1.7;resize:none;white-space:pre;overflow:auto" spellcheck="false"></textarea></div>
+    </div>`;
+    document.body.appendChild(m);
+  }
+  $('fmTitle').textContent=path;
+  const meta=$('fmMeta');
+  if(meta&&lastFileMeta){
+    const parts=[];
+    if(lastFileMeta.size!==undefined)parts.push(fmtSize(lastFileMeta.size));
+    if(lastFileMeta.mtime)parts.push(fmtDate(lastFileMeta.mtime));
+    if(lastFileMeta.mode)parts.push('perm: '+lastFileMeta.mode);
+    meta.textContent=parts.join(' \u00b7 ');
+  }else if(meta){meta.textContent=''}
+  // Render with line numbers
+  const lines=content.split('\n');
+  $('fmLines').innerHTML=lines.map((_,i)=>'<div>'+(i+1)+'</div>').join('');
+  $('fmPre').textContent=content;
+  $('fmEditor').value=content;
+  // Reset edit mode
+  $('fmView').style.display='flex';
+  $('fmEditorWrap').style.display='none';
+  $('fmEditBtn').style.display='inline-flex';
+  $('fmSaveBtn').style.display='none';
+  $('fmEditText').textContent='Edit';
+  m.classList.add('modal--open');
+}
+
+function closeFileModal(){
+  const wrap=$('fmEditorWrap');
+  const ed=$('fmEditor');
+  if(wrap&&wrap.style.display!=='none'&&ed&&ed.value!==lastFileContent){
+    if(!confirm('Discard unsaved changes?'))return;
+  }
+  closeM('fileModal');
+}
+
+function copyFileContent(){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(lastFileContent).then(()=>noti('Copied to clipboard','suc')).catch(()=>noti('Copy failed','err'));
+  }else{
+    noti('Clipboard not available','err');
+  }
+}
+
+function toggleFileEdit(){
+  const view=$('fmView');
+  const wrap=$('fmEditorWrap');
+  const editBtn=$('fmEditBtn');
+  const saveBtn=$('fmSaveBtn');
+  const editText=$('fmEditText');
+  const ed=$('fmEditor');
+  if(!view||!wrap||!ed)return;
+  if(wrap.style.display==='none'){
+    view.style.display='none';
+    wrap.style.display='flex';
+    editBtn.style.display='none';
+    saveBtn.style.display='inline-flex';
+    // Set height based on available space
+    const box=ed.closest('.modal__box');
+    if(box){ed.style.height=(box.clientHeight-55)+'px'}
+    ed.focus();
+  }else{
+    view.style.display='flex';
+    wrap.style.display='none';
+    editBtn.style.display='inline-flex';
+    saveBtn.style.display='none';
+    editText.textContent='Edit';
+  }
+}
+
+function saveFile(){
+  const ed=$('fmEditor');
+  if(!ed)return;
+  const content=ed.value;
+  safeSend({type:'write_file',path:lastFilePath,content:content,projectPath:$('projP').value||proj.p});
+  lastFileContent=content;
+  $('fmPre').textContent=content;
+  // Update line numbers
+  const lines=content.split('\n');
+  $('fmLines').innerHTML=lines.map((_,i)=>'<div>'+(i+1)+'</div>').join('');
+  toggleFileEdit();
+  noti('Saved '+lastFilePath,'suc');
+}
+
+function chooseFolder(){
+  if(!ws||ws.readyState!==1){noti('Server not connected','err');return}
+  safeSend({type:'choose_folder'});
+}
+
+function setProject(newPath){
+  if(!newPath)return;
+  safeSend({type:'set_project',path:newPath});
+  noti('Opening: '+newPath,'inf');
+}
+
 window.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.key==='b'){e.preventDefault();toggleS()}
   if(e.ctrlKey&&e.key==='n'){e.preventDefault();newChat()}
 });
 
-document.addEventListener('DOMContentLoaded',conn);
+document.addEventListener('DOMContentLoaded',()=>{
+  const oldFm=document.getElementById('fileModal');if(oldFm)oldFm.remove();
+  conn();
+  loadTheme();
+  // Mobile keyboard handling
+  const inp=$('inp');
+  if(inp){
+    inp.addEventListener('focus',()=>{
+      setTimeout(()=>{
+        const msgs=$('msgs');
+        if(msgs)msgs.scrollTop=msgs.scrollHeight;
+        inp.scrollIntoView({behavior:'smooth',block:'nearest'});
+      },300);
+    });
+  }
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize',()=>{
+      const h=window.visualViewport.height;
+      document.documentElement.style.setProperty('--vvh',h+'px');
+      const msgs=$('msgs');
+      if(msgs)msgs.scrollTop=msgs.scrollHeight;
+    });
+  }
+});
+
+function setTheme(theme){
+  localStorage.setItem('ccui-theme',theme);
+  applyTheme(theme);
+}
+
+function applyTheme(theme){
+  if(theme==='auto'){
+    const prefersDark=window.matchMedia('(prefers-color-scheme:dark)').matches;
+    document.documentElement.setAttribute('data-theme',prefersDark?'dark':'light');
+  }else{
+    document.documentElement.setAttribute('data-theme',theme);
+  }
+}
+
+function loadTheme(){
+  const t=localStorage.getItem('ccui-theme')||'auto';
+  const sel=$('themeSel');if(sel)sel.value=t;
+  applyTheme(t);
+  window.matchMedia('(prefers-color-scheme:dark)').addEventListener('change',e=>{
+    const cur=localStorage.getItem('ccui-theme')||'auto';
+    if(cur==='auto')applyTheme('auto');
+  });
+}
 </script>
 </body>
 </html>

@@ -18,6 +18,7 @@ const wss = new WebSocket.Server({ server });
 app.use(express.static(path.join(__dirname, 'public')));
 
 const activeSessions = new Map();
+let currentProjectPath = process.cwd();
 
 // SQLite setup
 const db = new Database(path.join(__dirname, 'chat.db'));
@@ -60,10 +61,10 @@ function updateSessionTitle(sessionId, title) {
   db.prepare('UPDATE sessions SET title = ? WHERE id = ?').run(title.slice(0, 100), sessionId);
 }
 
-function getSessions(projectPath) {
+function getSessions() {
   return db.prepare(
-    'SELECT id, title, created_at FROM sessions WHERE project_path = ? ORDER BY created_at DESC LIMIT 50'
-  ).all(projectPath);
+    'SELECT id, title, created_at FROM sessions ORDER BY created_at DESC LIMIT 50'
+  ).all();
 }
 
 function deleteSession(sessionId) {
@@ -82,8 +83,8 @@ wss.on('connection', (ws) => {
   ws.send(JSON.stringify({
     type: 'system',
     data: {
-      projectPath: process.cwd(),
-      projectName: path.basename(process.cwd()),
+      projectPath: currentProjectPath,
+      projectName: path.basename(currentProjectPath),
       nodeVersion: process.version,
       platform: process.platform
     }
@@ -119,7 +120,7 @@ setInterval(() => {
 }, 30000);
 
 function handleMessage(ws, data) {
-  const projectPath = data.projectPath || process.cwd();
+  const projectPath = data.projectPath || currentProjectPath;
 
   switch (data.type) {
     case 'chat': handleChat(ws, data, projectPath); break;
@@ -133,34 +134,95 @@ function handleMessage(ws, data) {
     case 'load_history': handleLoadHistory(ws, data); break;
     case 'list_sessions': handleListSessions(ws, data, projectPath); break;
     case 'delete_session': handleDeleteSession(ws, data); break;
+    case 'choose_folder': handleChooseFolder(ws); break;
+    case 'set_project': handleSetProject(ws, data); break;
     default: ws.send(JSON.stringify({ type: 'error', data: { message: `ไม่รู้จักคำสั่ง: ${data.type}` } }));
   }
 }
 
-function buildContextPrompt(sessionId, currentMessage, maxChars = 40000) {
+function handleChooseFolder(ws) {
+  let cmd, args;
+  if (process.platform === 'darwin') {
+    cmd = 'osascript';
+    args = ['-e', 'tell application "Finder" to activate', '-e', 'tell application "Finder" to POSIX path of (choose folder with prompt "Select project folder")'];
+  } else if (process.platform === 'win32') {
+    cmd = 'powershell.exe';
+    args = ['-Command', 'Add-Type -AssemblyName System.Windows.Forms; $f = New-Object System.Windows.Forms.FolderBrowserDialog; $f.Description = "Select project folder"; $f.ShowDialog() | Out-Null; $f.SelectedPath'];
+  } else {
+    // Linux - try zenity first, then kdialog
+    cmd = 'sh';
+    args = ['-c', 'zenity --file-selection --directory 2>/dev/null || kdialog --getexistingdirectory "" 2>/dev/null || echo ""'];
+  }
+  
+  const proc = spawn(cmd, args, { shell: false });
+  let output = '';
+  proc.stdout.on('data', chunk => { output += chunk.toString(); });
+  proc.on('close', code => {
+    const chosen = output.trim().replace(/\n/g, '');
+    if (chosen && fs.existsSync(chosen)) {
+      ws.send(JSON.stringify({ type: 'folder_selected', data: { path: chosen } }));
+    } else {
+      ws.send(JSON.stringify({ type: 'folder_cancelled', data: {} }));
+    }
+  });
+  proc.on('error', () => {
+    ws.send(JSON.stringify({ type: 'error', data: { message: 'Could not open folder dialog. Please type the path manually.' } }));
+  });
+}
+
+function handleSetProject(ws, data) {
+  const newPath = data.path;
+  if (!newPath || !fs.existsSync(newPath)) {
+    return ws.send(JSON.stringify({ type: 'error', data: { message: 'Invalid project path: ' + newPath } }));
+  }
+  currentProjectPath = path.resolve(newPath);
+  // Broadcast to all connected clients
+  const msg = JSON.stringify({
+    type: 'system',
+    data: {
+      projectPath: currentProjectPath,
+      projectName: path.basename(currentProjectPath),
+      nodeVersion: process.version,
+      platform: process.platform
+    }
+  });
+  wss.clients.forEach(client => {
+    if (client.readyState === 1) client.send(msg);
+  });
+}
+
+function buildContextPrompt(sessionId, currentMessage, mode = 'chat', maxChars = 30000) {
   const rows = getHistory(sessionId, 50);
-  if (!rows || rows.length === 0) return currentMessage;
   
-  // Exclude the current message that was just saved
-  const past = rows.filter(r => r.content !== currentMessage.trim());
+  let modePrefix = '';
+  if (mode === 'code') {
+    modePrefix = 'You are a code assistant. Provide concise, working code with minimal explanation unless asked. Use comments sparingly. Prefer complete, copy-paste ready solutions.\n\n';
+  }
   
-  let context = 'The following is the conversation history. Please respond based on this context.\n\n';
+  if (!rows || rows.length <= 1) return modePrefix + currentMessage;
+  
+  // Remove the last entry which is the current user message just saved
+  const past = rows.slice(0, -1).filter(r => r.content && r.content.trim().length > 0);
+  if (past.length === 0) return modePrefix + currentMessage;
+  
+  let context = modePrefix;
   for (const row of past) {
-    const label = row.role === 'user' ? 'User' : row.role === 'assistant' ? 'Assistant' : 'System';
+    const label = row.role === 'user' ? 'Human' : row.role === 'assistant' ? 'Assistant' : 'System';
     context += `${label}: ${row.content}\n`;
   }
-  context += `\nUser: ${currentMessage}`;
+  context += `\nHuman: ${currentMessage}\n\nAssistant:`;
   
   if (context.length > maxChars) {
-    // Fallback: take only last N messages
     const recent = past.slice(-20);
-    context = 'The following is the recent conversation history. Please respond based on this context.\n\n';
+    context = modePrefix;
     for (const row of recent) {
-      const label = row.role === 'user' ? 'User' : row.role === 'assistant' ? 'Assistant' : 'System';
+      const label = row.role === 'user' ? 'Human' : row.role === 'assistant' ? 'Assistant' : 'System';
       context += `${label}: ${row.content}\n`;
     }
-    context += `\nUser: ${currentMessage}`;
+    context += `\nHuman: ${currentMessage}\n\nAssistant:`;
   }
+  
+  console.log('[CONTEXT PROMPT length]', context.length, 'past messages:', past.length, 'mode:', mode);
   return context;
 }
 
@@ -197,7 +259,7 @@ function handleChat(ws, data, projectPath) {
 
   ws.send(JSON.stringify({ type: 'status', data: { status: 'starting', message: 'กำลังเรียก Claude...' } }));
 
-  const prompt = buildContextPrompt(sessionId, data.message || '');
+  const prompt = buildContextPrompt(sessionId, data.message || '', data.mode || 'chat');
   const cliCmd = process.env.CLAUDE_CMD || 'claude';
   const proc = spawn(cliCmd, ['--print', prompt], {
     cwd: projectPath,
@@ -297,8 +359,19 @@ function handleReadFile(ws, data, projectPath) {
     return ws.send(JSON.stringify({ type: 'file_error', data: { path: data.path, error: 'เข้าถึงพาธนอกโปรเจกต์ไม่ได้' } }));
   }
   try {
-    const content = fs.readFileSync(path.resolve(projectPath, data.path), 'utf8');
-    ws.send(JSON.stringify({ type: 'file_content', data: { path: data.path, content } }));
+    const fullPath = path.resolve(projectPath, data.path);
+    const content = fs.readFileSync(fullPath, 'utf8');
+    const stat = fs.statSync(fullPath);
+    ws.send(JSON.stringify({
+      type: 'file_content',
+      data: {
+        path: data.path,
+        content,
+        size: stat.size,
+        mtime: stat.mtimeMs,
+        mode: (stat.mode & parseInt('777', 8)).toString(8)
+      }
+    }));
   } catch (e) {
     ws.send(JSON.stringify({ type: 'file_error', data: { path: data.path, error: e.message } }));
   }
@@ -325,7 +398,16 @@ function handleListFiles(ws, data, projectPath) {
   }
   try {
     const entries = fs.readdirSync(target, { withFileTypes: true });
-    const files = entries.map(e => ({ name: e.name, isDirectory: e.isDirectory(), path: path.join(data.path || '', e.name) }));
+    const files = entries.map(e => {
+      const stat = fs.statSync(path.join(target, e.name));
+      return {
+        name: e.name,
+        isDirectory: e.isDirectory(),
+        path: path.join(data.path || '', e.name),
+        size: stat.size,
+        mtime: stat.mtimeMs
+      };
+    });
     files.sort((a, b) => (a.isDirectory === b.isDirectory) ? a.name.localeCompare(b.name) : (a.isDirectory ? -1 : 1));
     ws.send(JSON.stringify({ type: 'file_list', data: { path: data.path || '.', files } }));
   } catch (e) {
@@ -335,7 +417,10 @@ function handleListFiles(ws, data, projectPath) {
 
 function handleStop(ws, data) {
   const session = activeSessions.get(data.sessionId || 'default');
-  if (session?.process) session.process.kill();
+  if (session?.process) {
+    session.process.kill();
+    ws.send(JSON.stringify({ type: 'stopped', data: { sessionId: data.sessionId || 'default' } }));
+  }
 }
 
 function handleLoadHistory(ws, data) {
@@ -344,8 +429,8 @@ function handleLoadHistory(ws, data) {
   ws.send(JSON.stringify({ type: 'history', data: { sessionId, messages: rows } }));
 }
 
-function handleListSessions(ws, data, projectPath) {
-  const rows = getSessions(projectPath);
+function handleListSessions(ws, data) {
+  const rows = getSessions();
   ws.send(JSON.stringify({ type: 'sessions', data: { sessions: rows } }));
 }
 
