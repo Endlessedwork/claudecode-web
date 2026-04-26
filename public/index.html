@@ -160,6 +160,31 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
 .message__body pre{background:var(--color-bg);border:1px solid var(--color-border);border-radius:var(--radius-sm);padding:10px;margin:8px 0;overflow-x:auto}
 .message__body pre code{background:none;padding:0;color:var(--color-text);font-size:12px;line-height:1.5}
 .message__body code{font-family:'SF Mono',Monaco,'Courier New',monospace;background:var(--color-bg);padding:2px 5px;border-radius:4px;font-size:12px;color:var(--color-brand)}
+.message__thinking{margin-top:4px;font-size:12px;color:var(--color-text-muted)}
+.message__thinking details{background:var(--color-surface);border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);padding:6px 10px}
+.message__thinking summary{cursor:pointer;font-weight:500;color:var(--color-text-secondary)}
+.message__thinking .thinking-content{font-family:'SF Mono',Monaco,'Courier New',monospace;white-space:pre-wrap;word-break:break-word;padding-top:6px;font-size:11px;line-height:1.5;color:var(--color-text-muted);max-height:200px;overflow-y:auto}
+.message__meta{margin-top:4px}
+.message__event-log{margin-top:8px;font-size:12px;border:1px solid var(--color-border-subtle);border-radius:var(--radius-sm);background:var(--color-bg);overflow:hidden}
+.event-log-header{background:var(--color-surface-elevated);padding:6px 10px;font-weight:600;color:var(--color-text-secondary);font-size:10px;text-transform:uppercase;letter-spacing:0.5px;display:flex;align-items:center;gap:6px}.event-log-header .ev-svg{width:14px;height:14px;opacity:0.7}
+
+.event-log-body{max-height:300px;overflow-y:auto;padding:6px 8px}
+.event-log-entry{display:flex;align-items:flex-start;gap:10px;padding:6px 4px;border-bottom:1px solid var(--color-border-subtle);transition:background 120ms}
+.event-log-entry:hover{background:var(--color-surface-elevated)}
+.event-log-entry:last-child{border-bottom:none}
+.ev-icon{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}.ev-svg{width:16px;height:16px}
+.ev-content{flex:1;min-width:0}
+.ev-header{display:flex;align-items:center;gap:8px;margin-bottom:3px}
+.ev-label{font-size:11px;font-weight:600}
+.ev-extra{font-size:10px;color:var(--color-text-muted)}
+.ev-summary{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.ev-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:500;background:var(--color-surface-elevated);color:var(--color-text-secondary);border:1px solid var(--color-border-subtle);white-space:nowrap}.ev-tag .ev-svg{width:12px;height:12px;opacity:0.8}
+.ev-tag--green{background:rgba(34,197,94,0.12);color:#22c55e;border-color:rgba(34,197,94,0.2)}
+.ev-tag--purple{background:rgba(168,85,247,0.12);color:#a855f7;border-color:rgba(168,85,247,0.2)}
+.ev-tag--blue{background:rgba(59,130,246,0.12);color:#3b82f6;border-color:rgba(59,130,246,0.2)}
+.ev-tag--red{background:rgba(239,68,68,0.12);color:#ef4444;border-color:rgba(239,68,68,0.2)}
+.ev-text-muted{color:var(--color-text-muted);font-style:italic}
+.ev-text-red{color:var(--color-danger)}
 
 /* Input bar */
 .input-bar{display:flex;gap:10px;align-items:flex-end}
@@ -231,7 +256,7 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
 .drawer-overlay--open{opacity:1;pointer-events:all}
 
 /* Files page */
-.page-files__content,.page-settings__content,.page-terminal__content{padding:16px}
+.page-files__content,.page-settings__content,.page-term__content{padding:16px}
 .file-tree{display:flex;flex-direction:column;gap:2px}
 .file-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius-sm);cursor:pointer;color:var(--color-text-secondary);font-family:'SF Mono',Monaco,'Courier New',monospace;font-size:12px;transition:background var(--transition-fast),color var(--transition-fast)}
 .file-item:hover{background:var(--color-surface-elevated);color:var(--color-text)}
@@ -333,7 +358,7 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
         <svg class="icon icon--sm" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M19.5 21a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3h-5.379a.75.75 0 0 1-.53-.22L11.47 3.66A2.25 2.25 0 0 0 9.879 3H4.5a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h15ZM9 12.75a.75.75 0 0 0 0 1.5h6a.75.75 0 0 0 0-1.5h-6Z" clip-rule="evenodd"/></svg>
         <span class="hide-sm">Open</span>
       </button>
-      <button class="btn btn--primary" onclick="newChat()">
+      <button class="btn btn--primary" onclick="if(document.querySelector('.page-kimi-api.page--active')){newKimiChat()}else{newChat()}">
         <svg class="icon icon--sm" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z" clip-rule="evenodd"/></svg>
         <span class="hide-sm">New Chat</span>
       </button>
@@ -370,14 +395,26 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
             <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2.25 5.25a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3V15a3 3 0 0 1-3 3h-3v.257c0 .597.237 1.17.659 1.591l.621.622a.75.75 0 0 1-.53 1.28h-9a.75.75 0 0 1-.53-1.28l.621-.622a2.25 2.25 0 0 0 .659-1.591V18h-3a3 3 0 0 1-3-3V5.25Zm1.5 0v9.75a1.5 1.5 0 0 0 1.5 1.5h13.5a1.5 1.5 0 0 0 1.5-1.5V5.25a1.5 1.5 0 0 0-1.5-1.5H5.25a1.5 1.5 0 0 0-1.5 1.5Z" clip-rule="evenodd"/></svg>
             <span class="sidebar__item-text">Interactive</span>
           </div>
+          <div class="sidebar__item" data-v="kimi-api" onclick="switchV('kimi-api',this)">
+            <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM8.288 14.212a.75.75 0 0 1-.042 1.06 7.488 7.488 0 0 0 2.554 1.574.75.75 0 1 1-.5 1.414 9.088 9.088 0 0 1-3.098-1.916.75.75 0 0 1 1.086-1.032Zm5.424-5.424a.75.75 0 0 1 .042-1.06 7.488 7.488 0 0 0-2.554-1.574.75.75 0 1 1 .5-1.414 9.088 9.088 0 0 1 3.098 1.916.75.75 0 0 1-1.086 1.032Z" clip-rule="evenodd"/></svg>
+            <span class="sidebar__item-text">Kimi Chat</span>
+          </div>
         </div>
         <div class="sidebar__section" id="histSec">
           <div class="sidebar__label">History</div>
           <div id="histList" style="display:flex;flex-direction:column;gap:2px"></div>
         </div>
+        <div class="sidebar__section" id="kimiHistSec">
+          <div class="sidebar__label">Kimi History</div>
+          <div id="kimiHistList" style="display:flex;flex-direction:column;gap:2px"></div>
+        </div>
+        <div class="sidebar__section" id="claudeSec">
+          <div class="sidebar__label">Claude Native</div>
+          <div id="claudeList" style="display:flex;flex-direction:column;gap:2px"></div>
+        </div>
         <div class="sidebar__section">
           <div class="sidebar__label">System</div>
-          <div class="sidebar__item" data-v="set" onclick="switchV('set',this)">
+          <div class="sidebar__item" data-v="settings" onclick="switchV('settings',this)">
             <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 0 0-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 0 0-2.282.819l-.922 1.597a1.875 1.875 0 0 0 .432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 0 0 0 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 0 0-.432 2.385l.922 1.597a1.875 1.875 0 0 0 2.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.182.088.277.228.297.35l.178 1.071c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.114-.26.297-.349.344-.165.673-.356.985-.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 0 0 2.28-.819l.923-1.597a1.875 1.875 0 0 0-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 0 0 0-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 0 0-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 0 0-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 0 0-1.85-1.567h-1.843ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" clip-rule="evenodd"/></svg>
             <span class="sidebar__item-text">Settings</span>
           </div>
@@ -438,6 +475,7 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
                 <button class="input-bar__mode input-bar__mode--active" id="modeChat" onclick="setMode('chat')">Chat</button>
                 <button class="input-bar__mode" id="modeCode" onclick="setMode('code')">Code</button>
               </div>
+              <div id="sText" style="font-size:11px;color:var(--color-text-muted);padding:2px 6px;min-height:16px"></div>
               <textarea class="input-bar__textarea" id="inp" placeholder="Type a message or use /help for slash commands..." rows="1" onkeydown="hKey(event)" oninput="autoR(this)"></textarea>
             </div>
             <button class="btn btn--icon" id="sBtn" onclick="doSend()" aria-label="Send">
@@ -472,6 +510,33 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
         </div>
       </section>
 
+      <!-- Kimi API Chat Page -->
+      <section class="page page-kimi-api" id="page-kimi-api">
+        <div class="page-chat__messages" id="kimiMsgs">
+          <div class="welcome" id="kimiWs">
+            <div class="welcome__logo" style="background:linear-gradient(135deg,#10b981,#059669)">K</div>
+            <div class="welcome__title">Kimi Chat</div>
+            <div class="welcome__desc">Powered by Moonshot AI API. Enter your API key in Settings to start chatting.</div>
+            <div class="welcome__actions">
+              <button class="welcome__btn" onclick="newKimiChat()">
+                <span class="welcome__btn-title">New Chat</span>
+                <span class="welcome__btn-desc">Start a fresh Kimi conversation</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="page-chat__input">
+          <div class="input-bar">
+            <div class="input-bar__field">
+              <textarea class="input-bar__textarea" id="kimiInp" placeholder="Ask Kimi..." rows="1" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendKimiAPI()}" oninput="autoR(this)"></textarea>
+            </div>
+            <button class="btn btn--primary btn--icon" onclick="sendKimiAPI()">
+              <svg class="icon" viewBox="0 0 24 24"><path d="M3.478 2.404c-.63-.272-1.362.117-1.39.835L2 18.5l17.053-7.465a1 1 0 0 0 0-1.838L2.56 1.604a1.25 1.25 0 0 0-1.082.8Z"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
       <!-- Files Page -->
       <section class="page page-files" id="page-files">
         <div class="page__header">
@@ -488,9 +553,9 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
       </section>
 
       <!-- Terminal Page -->
-      <section class="page page-terminal" id="page-terminal">
+      <section class="page page-term" id="page-term">
         <div class="page__header"><div class="page__title">Terminal</div></div>
-        <div class="page-terminal__content">
+        <div class="page-term__content">
           <div class="terminal-box" id="termC">
             <div class="terminal-line"><span class="terminal-prompt">$</span><span class="terminal-suc">Terminal ready (runs on host machine)</span></div>
             <div id="tLines"></div>
@@ -507,8 +572,16 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
         <div class="page__header"><div class="page__title">Settings</div></div>
         <div class="page-settings__content">
           <div class="setting-row">
-            <div class="setting-label">Claude CLI Path <small>Path to the claude command</small></div>
-            <input type="text" class="setting-input" id="cPath" value="claude" style="max-width:200px">
+            <div class="setting-label">AI Provider <small>Select the AI assistant CLI</small></div>
+            <select class="setting-input" id="providerSel" onchange="setProvider(this.value)" style="max-width:140px">
+              <option value="claude">Claude</option>
+              <option value="custom">Custom</option>
+              <option value="mock">[Test] Mock</option>
+            </select>
+          </div>
+          <div class="setting-row" id="customCmdRow" style="display:none">
+            <div class="setting-label">Custom CLI Path <small>Full path to your custom CLI command</small></div>
+            <input type="text" class="setting-input" id="customCmd" value="" placeholder="e.g. /usr/local/bin/my-ai" style="max-width:320px" oninput="saveCustomCmd()">
           </div>
           <div class="setting-row">
             <div class="setting-label">Project Path <small>Working directory for Claude</small></div>
@@ -521,6 +594,26 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
               <option value="light">Light</option>
               <option value="auto">Auto</option>
             </select>
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">Kimi API Key <small>Required for Kimi Chat mode</small></div>
+            <input type="password" class="setting-input" id="kimiApiKey" value="" placeholder="sk-..." style="max-width:320px">
+          </div>
+          <div class="setting-row">
+            <div class="setting-label">Kimi Model <small>Select model for Kimi API</small></div>
+            <select class="setting-input" id="kimiModel" style="max-width:180px">
+              <option value="kimi-k2.5">kimi-k2.5 (latest)</option>
+              <option value="moonshot-v1-8k">moonshot-v1-8k</option>
+              <option value="moonshot-v1-32k">moonshot-v1-32k</option>
+              <option value="moonshot-v1-128k">moonshot-v1-128k</option>
+            </select>
+          </div>
+          <div class="setting-row">
+            <button class="btn btn--primary" onclick="saveKimiSettings()">
+              <svg class="icon icon--sm" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M19.5 21a3 3 0 0 0 3-3V9a3 3 0 0 0-3-3h-5.379a.75.75 0 0 1-.53-.22L11.47 3.66A2.25 2.25 0 0 0 9.879 3H4.5a3 3 0 0 0-3 3v12a3 3 0 0 0 3 3h15Zm-6.75-10.5a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25v2.25a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V10.5Z" clip-rule="evenodd"/></svg>
+              Save Kimi Settings
+            </button>
+            <span id="kimiSaveStatus" style="font-size:12px;color:var(--color-text-muted);margin-left:8px"></span>
           </div>
           <div class="setting-row" style="cursor:pointer" onclick="reconnect()">
             <div class="setting-label" style="color:var(--color-brand)">Reconnect <small>Refresh WebSocket connection to server</small></div>
@@ -563,7 +656,11 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
       <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2.25 6a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V6Zm3.97.97a.75.75 0 0 1 1.06 0l2.25 2.25a.75.75 0 0 1 0 1.06l-2.25 2.25a.75.75 0 0 1-1.06-1.06l1.72-1.72-1.72-1.72a.75.75 0 0 1 0-1.06Zm4.28 4.28a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" clip-rule="evenodd"/></svg>
       <span class="bottom-nav__label">Terminal</span>
     </div>
-    <div class="bottom-nav__item" data-v="set" onclick="switchV('set',this)">
+    <div class="bottom-nav__item" data-v="kimi-api" onclick="switchV('kimi-api',this)">
+      <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM8.288 14.212a.75.75 0 0 1-.042 1.06 7.488 7.488 0 0 0 2.554 1.574.75.75 0 1 1-.5 1.414 9.088 9.088 0 0 1-3.098-1.916.75.75 0 0 1 1.086-1.032Zm5.424-5.424a.75.75 0 0 1 .042-1.06 7.488 7.488 0 0 0-2.554-1.574.75.75 0 1 1 .5-1.414 9.088 9.088 0 0 1 3.098 1.916.75.75 0 0 1-1.086 1.032Z" clip-rule="evenodd"/></svg>
+      <span class="bottom-nav__label">Kimi</span>
+    </div>
+    <div class="bottom-nav__item" data-v="settings" onclick="switchV('settings',this)">
       <svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M11.078 2.25c-.917 0-1.699.663-1.85 1.567L9.05 4.889c-.02.12-.115.26-.297.348a7.493 7.493 0 0 0-.986.57c-.166.115-.334.126-.45.083L6.3 5.508a1.875 1.875 0 0 0-2.282.819l-.922 1.597a1.875 1.875 0 0 0 .432 2.385l.84.692c.095.078.17.229.154.43a7.598 7.598 0 0 0 0 1.139c.015.2-.059.352-.153.43l-.841.692a1.875 1.875 0 0 0-.432 2.385l.922 1.597a1.875 1.875 0 0 0 2.282.818l1.019-.382c.115-.043.283-.031.45.082.312.214.641.405.985.57.182.088.277.228.297.35l.178 1.071c.151.904.933 1.567 1.85 1.567h1.844c.916 0 1.699-.663 1.85-1.567l.178-1.072c.02-.12.114-.26.297-.349.344-.165.673-.356.985-.57.167-.114.335-.125.45-.082l1.02.382a1.875 1.875 0 0 0 2.28-.819l.923-1.597a1.875 1.875 0 0 0-.432-2.385l-.84-.692c-.095-.078-.17-.229-.154-.43a7.614 7.614 0 0 0 0-1.139c-.016-.2.059-.352.153-.43l.84-.692c.708-.582.891-1.59.433-2.385l-.922-1.597a1.875 1.875 0 0 0-2.282-.818l-1.02.382c-.114.043-.282.031-.449-.083a7.49 7.49 0 0 0-.985-.57c-.183-.087-.277-.227-.297-.348l-.179-1.072a1.875 1.875 0 0 0-1.85-1.567h-1.843ZM12 15.75a3.75 3.75 0 1 0 0-7.5 3.75 3.75 0 0 0 0 7.5Z" clip-rule="evenodd"/></svg>
       <span class="bottom-nav__label">Settings</span>
     </div>
@@ -607,7 +704,7 @@ body{font-family:var(--font-sans);background:var(--color-bg);color:var(--color-t
 <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.min.js"></script>
 <script>
-let ws,sid='s_'+Date.now(),procRun=false,proj={p:'',n:''},recAtt=0,currentStream='';
+let ws,sid='s_'+Date.now(),kimiSid='',procRun=false,proj={p:'',n:''},recAtt=0,currentStream='';let pendingLoadHistory=null;
 let chatMode='chat',filePath='',pendingFileView=null;
 let term=null,fitAddon=null,ptyActive=false;
 const $=id=>document.getElementById(id);
@@ -626,7 +723,7 @@ function conn(){
   updateC('wait');
   try{
     ws=new WebSocket(url);
-    ws.onopen=()=>{recAtt=0;updateC('conn');$('cStat').innerHTML='<span class="status-badge__dot"></span><span>Online</span>';$('cStat').className='status-badge status-badge--online';$('xBtn').style.display='none';$('sBtn').style.display='flex'};
+    ws.onopen=()=>{recAtt=0;updateC('conn');$('cStat').innerHTML='<span class="status-badge__dot"></span><span>Online</span>';$('cStat').className='status-badge status-badge--online';$('xBtn').style.display='none';$('sBtn').style.display='flex';if(pendingLoadHistory){safeSend({type:'load_history',sessionId:pendingLoadHistory});pendingLoadHistory=null;}if(kimiSid){safeSend({type:'load_history',sessionId:kimiSid});}};
     ws.onmessage=e=>{try{handleMsg(JSON.parse(e.data))}catch(err){console.error(err)}};
     ws.onclose=()=>{resetUI();updateC('disc');if(recAtt<10){recAtt++;setTimeout(conn,Math.min(1000*Math.pow(2,recAtt),20000))}else{$('helpM').classList.add('modal--open')}};
     ws.onerror=()=>updateC('disc');
@@ -643,10 +740,16 @@ function handleMsg(d){
       const pr=$('projP');if(pr)pr.value=d.data.projectPath;
       loadFiles();
       safeSend({type:'load_history',sessionId:sid});
+      if(kimiSid){safeSend({type:'load_history',sessionId:kimiSid});}
       safeSend({type:'list_sessions',projectPath:$('projP').value||proj.p});
+      safeSend({type:'list_claude_sessions',projectPath:d.data.projectPath});
       break;
     case 'stream':streamOut(d.data.text);break;
+    case 'stream_event':handleStreamEvent(d.data);break;
+    case 'claude_session_linked':noti('Claude session linked','suc');break;
     case 'complete':compOut(d.data);break;
+    case 'kimi_stream':kimiStreamOut(d.data.text);break;
+    case 'kimi_complete':kimiCompOut(d.data);break;
     case 'status':$('sText').textContent=d.data.message;break;
     case 'error':handleErr(d.data);break;
     case 'terminal_output':addTL(d.data.text,'terminal-out');break;
@@ -660,7 +763,7 @@ function handleMsg(d){
         pendingFileView=null;
       }else{
         noti('Read '+d.data.path+' success','suc');
-        addMsg('sys','<svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625ZM7.5 15a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 7.5 15Zm.75-2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" clip-rule="evenodd"/></svg> File <code>'+esc(d.data.path)+'</code>:<pre><code>'+esc(d.data.content)+'</code></pre>');
+        addSysMsg('<svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625ZM7.5 15a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 7.5 15Zm.75-2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z" clip-rule="evenodd"/></svg> File <code>'+esc(d.data.path)+'</code>:<pre><code>'+esc(d.data.content)+'</code></pre>','File '+d.data.path+':\n'+d.data.content);
       }
       break;
     case 'file_written':noti('Wrote '+d.data.path+' success','suc');loadFiles();break;
@@ -668,13 +771,29 @@ function handleMsg(d){
     case 'stderr':streamOut(d.data.text);break;
     case 'pty_output':if(term)term.write(d.data.text);break;
     case 'pty_ready':noti('Claude Interactive ready','suc');break;
-    case 'pty_exit':noti('Claude Interactive stopped (exit: '+d.data.code+')','inf');stopPTYUI();break;
-    case 'history':renderHistory(d.data.messages);break;
-    case 'sessions':renderSessions(d.data.sessions);break;
+    case 'pty_exit':
+      if(d.data.error){
+        noti(d.data.message||('PTY failed: exit '+d.data.code),'err');
+        if(d.data.recommendChat){
+          setMode('chat');
+          switchV('chat',document.querySelector('.sidebar__item[data-v="chat"]'));
+        }
+      }else{
+        noti('Interactive stopped (exit: '+d.data.code+')','inf');
+      }
+      stopPTYUI();
+      break;
+    case 'history':
+      if(d.data.sessionId===kimiSid){renderKimiHistory(d.data.messages);}
+      else{renderHistory(d.data.messages);}
+      break;
+    case 'sessions':renderSessions(d.data.sessions);renderKimiSessions(d.data.sessions);break;
+    case 'claude_sessions':renderClaudeSessions(d.data.sessions);break;
+    case 'claude_session_content':renderClaudeSessionContent(d.data);break;
     case 'stopped':resetUI();noti('Stopped','inf');break;
     case 'folder_selected':setProject(d.data.path);break;
     case 'folder_cancelled':noti('Folder selection cancelled','inf');break;
-    case 'session_deleted':noti('Session deleted','inf');break;
+    case 'session_deleted':noti('Session deleted','inf');safeSend({type:'list_sessions',projectPath:$('projP').value||proj.p});break;
   }
 }
 
@@ -695,7 +814,9 @@ function send(txt){
   addMsg('user',esc(t));showTyp();
   $('inp').value='';autoR($('inp'));
   $('sBtn').style.display='none';$('xBtn').style.display='flex';
-  safeSend({type:'chat',message:t,sessionId:sid,projectPath:$('projP').value||proj.p,mode:chatMode});
+  const provider=$('providerSel')?$('providerSel').value:'claude';
+  const customCmd=$('customCmd')?$('customCmd').value:'';
+  safeSend({type:'chat',message:t,sessionId:sid,projectPath:$('projP').value||proj.p,mode:chatMode,provider,customCmd});
 }
 
 function doSend(){send($('inp').value)}
@@ -741,7 +862,7 @@ function execSlash(cmd){
 
 function runShell(c){
   if(!ws||ws.readyState!==1)return;
-  addMsg('sys','<svg class="icon" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2.25 6a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V6Zm3.97.97a.75.75 0 0 1 1.06 0l2.25 2.25a.75.75 0 0 1 0 1.06l-2.25 2.25a.75.75 0 0 1-1.06-1.06l1.72-1.72-1.72-1.72a.75.75 0 0 1 0-1.06Zm4.28 4.28a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" clip-rule="evenodd"/></svg> Command: <code>'+esc(c)+'</code>');
+  addSysMsg('<svg class="icon" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2.25 6a3 3 0 0 1 3-3h13.5a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3H5.25a3 3 0 0 1-3-3V6Zm3.97.97a.75.75 0 0 1 1.06 0l2.25 2.25a.75.75 0 0 1 0 1.06l-2.25 2.25a.75.75 0 0 1-1.06-1.06l1.72-1.72-1.72-1.72a.75.75 0 0 1 0-1.06Zm4.28 4.28a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" clip-rule="evenodd"/></svg> Command: <code>'+esc(c)+'</code>','Command: '+c);
   safeSend({type:'terminal',command:c,projectPath:$('projP').value||proj.p});
 }
 
@@ -758,26 +879,195 @@ function resetUI(){
   const ty=$('tyM');if(ty)ty.remove();
 }
 
+function getLastStreamMsg(){
+  const msgs=$('msgs').querySelectorAll('[data-stream="true"]');
+  return msgs.length>0?msgs[msgs.length-1]:null;
+}
+
 function streamOut(t){
   const ty=$('tyM');if(ty)ty.remove();
-  let sm=$('streamMsg');
-  if(!sm){const m=$('msgs');sm=document.createElement('div');sm.className='msg message';sm.id='streamMsg';sm.innerHTML='<div class="message__avatar message__avatar--claude">C</div><div class="message__content"><div class="message__header"><span class="message__sender">Claude</span><span class="message__time">Working...</span></div><div class="message__body" id="streamB"></div></div>';m.appendChild(sm)}
-  currentStream+=t;const b=$('streamB');if(b)b.innerHTML=fmt(currentStream);
+  let sm=getLastStreamMsg();
+  if(!sm){
+    const m=$('msgs');
+    sm=document.createElement('div');
+    sm.className='msg message';
+    sm.setAttribute('data-stream','true');
+    sm.innerHTML='<div class="message__avatar message__avatar--claude">C</div><div class="message__content"><div class="message__header"><span class="message__sender">Claude</span><span class="message__time">Working...</span></div><div class="message__body" data-stream-body="true"></div><div class="message__event-log" data-event-log="true"><div class="event-log-header">'+svgIcon(ICONS.signal)+' Event Log</div><div class="event-log-body" data-event-log-body="true"></div></div></div>';
+    m.appendChild(sm);
+  }
+  currentStream+=t;
+  const b=sm.querySelector('[data-stream-body="true"]');
+  if(b)b.innerHTML=fmt(currentStream);
   $('msgs').scrollTop=$('msgs').scrollHeight;
+}
+
+function handleStreamEvent(data){
+  const event = data.event;
+  const sm=getLastStreamMsg();
+  if(!sm)return;
+  
+  // Event log: show parsed summary with icons & colors
+  const logBody=sm.querySelector('[data-event-log-body="true"]');
+  if(logBody && data.raw){
+    const entry=document.createElement('div');
+    entry.className='event-log-entry';
+    
+    const eventMeta={
+      assistant:{icon:svgIcon(ICONS.sparkles),color:'#22c55e',bg:'rgba(34,197,94,0.1)',label:'AI Response'},
+      thinking:{icon:svgIcon(ICONS.lightbulb),color:'#a855f7',bg:'rgba(168,85,247,0.1)',label:'Thinking'},
+      result:{icon:svgIcon(ICONS.checkCircle),color:'#3b82f6',bg:'rgba(59,130,246,0.1)',label:'Complete'},
+      error:{icon:svgIcon(ICONS.xCircle),color:'#ef4444',bg:'rgba(239,68,68,0.1)',label:'Error'},
+      system:{icon:svgIcon(ICONS.cube),color:'#6b7280',bg:'rgba(107,114,128,0.1)',label:'System'}
+    }[event]||{icon:svgIcon(ICONS.cube),color:'#f59e0b',bg:'rgba(245,158,11,0.1)',label:event||'Event'};
+    
+    let summary='';
+    let extra='';
+    try{
+      const ev=JSON.parse(data.raw);
+      switch(event){
+        case 'assistant':{
+          const blocks=Array.isArray(ev.message?.content)?ev.message.content:[ev.message?.content];
+          const textBlocks=blocks.filter(b=>b.type==='text');
+          const thinkingBlocks=blocks.filter(b=>b.type==='thinking');
+          const textLen=textBlocks.map(b=>b.text?.length||0).reduce((a,b)=>a+b,0);
+          const thinkLen=thinkingBlocks.map(b=>b.thinking?.length||0).reduce((a,b)=>a+b,0);
+          const tags=[];
+          if(textLen>0) tags.push('<span class="ev-tag ev-tag--green">'+svgIcon(ICONS.docText)+' '+textLen+' chars</span>');
+          if(thinkLen>0) tags.push('<span class="ev-tag ev-tag--purple">'+svgIcon(ICONS.lightbulb)+' '+thinkLen+' chars</span>');
+          if(ev.message?.stop_reason) tags.push('<span class="ev-tag">'+svgIcon(ICONS.flag)+' '+ev.message.stop_reason+'</span>');
+          summary=tags.join(' ');
+          extra=ev.message?.model?'<span class="ev-meta">'+ev.message.model+'</span>':'';
+          break;
+        }
+        case 'thinking':{
+          const t=ev.thinking||'';
+          summary='<span class="ev-text-muted">'+esc(t.slice(0,100))+(t.length>100?'...':'')+'</span>';
+          extra='<span class="ev-tag">'+t.length+' chars</span>';
+          break;
+        }
+        case 'result':{
+          const tags=[];
+          if(ev.total_cost_usd!==undefined) tags.push('<span class="ev-tag ev-tag--blue">'+svgIcon(ICONS.coins)+' $'+ev.total_cost_usd.toFixed(4)+'</span>');
+          if(ev.usage) tags.push('<span class="ev-tag">'+svgIcon(ICONS.coins)+' '+ev.usage.input_tokens+'→'+ev.usage.output_tokens+'</span>');
+          if(ev.result) tags.push('<span class="ev-tag ev-tag--green">'+svgIcon(ICONS.check)+' '+ev.result+'</span>');
+          summary=tags.join(' ');
+          break;
+        }
+        case 'system':{
+          const tags=[];
+          if(ev.subtype) tags.push('<span class="ev-tag">'+esc(ev.subtype)+'</span>');
+          if(ev.hook_name) tags.push('<span class="ev-tag">'+svgIcon(ICONS.bolt)+' '+esc(ev.hook_name)+'</span>');
+          summary=tags.join(' ');
+          break;
+        }
+        case 'error':{
+          summary='<span class="ev-text-red">'+esc(ev.error||ev.message||'Unknown error')+'</span>';
+          break;
+        }
+        default:{
+          summary=Object.keys(ev).map(k=>'<span class="ev-tag">'+k+'</span>').join(' ');
+        }
+      }
+    }catch(e){
+      summary='<span class="ev-text-muted">'+esc(data.raw.slice(0,200))+'</span>';
+    }
+    
+    entry.innerHTML='<div class="ev-icon" style="background:'+eventMeta.bg+';color:'+eventMeta.color+'">'+eventMeta.icon+'</div>'+
+      '<div class="ev-content">'+
+        '<div class="ev-header">'+
+          '<span class="ev-label" style="color:'+eventMeta.color+'">'+eventMeta.label+'</span>'+
+          (extra?'<span class="ev-extra">'+extra+'</span>':'')+
+        '</div>'+
+        '<div class="ev-summary">'+summary+'</div>'+
+      '</div>';
+    
+    logBody.appendChild(entry);
+    logBody.scrollTop=logBody.scrollHeight;
+  }
+  
+  if(event==='thinking'){
+    let th=sm.querySelector('[data-thinking="true"]');
+    if(!th){
+      th=document.createElement('div');th.setAttribute('data-thinking','true');th.className='message__thinking';
+      th.innerHTML='<details open><summary>'+svgIcon(ICONS.lightbulb)+' Thinking</summary><div class="thinking-content" data-thinking-body="true"></div></details>';
+      sm.querySelector('.message__content').appendChild(th);
+    }
+    const tb=th.querySelector('[data-thinking-body="true"]');
+    if(tb){tb.textContent+=(tb.textContent?'':'')+data.text}
+  }else if(event==='result'){
+    if(data.cost){
+      let meta=sm.querySelector('.message__meta');
+      if(!meta){meta=document.createElement('div');meta.className='message__meta';sm.querySelector('.message__content').appendChild(meta)}
+      meta.innerHTML='<small style="color:var(--color-text-muted)">Cost: $'+data.cost.toFixed(4)+'</small>';
+    }
+  }else if(event==='error'){
+    addSysMsg('<svg class="icon" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg> Claude Error: '+esc(data.error||'Unknown error'),'Claude Error: '+(data.error||'Unknown error'));
+  }
 }
 
 function compOut(d){
   resetUI();
-  const sm=$('streamMsg');if(sm){sm.id='';sm.querySelector('.message__time').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'})}
+  const sm=getLastStreamMsg();
+  if(sm){
+    sm.removeAttribute('data-stream');
+    sm.querySelector('.message__time').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  }
 }
 
 function handleErr(d){
   resetUI();
-  addMsg('sys','<svg class="icon" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg> '+esc(d.message)+(d.hint?'<br><small style="color:var(--color-text-muted)">'+esc(d.hint)+'</small>':''));
+  const isKimi=d.sessionId && d.sessionId===kimiSid;
+  const html='<svg class="icon" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M9.401 3.003c1.155-2 4.043-2 5.197 0l7.355 12.748c1.154 2-.29 4.5-2.599 4.5H4.645c-2.309 0-3.752-2.5-2.598-4.5L9.4 3.003ZM12 8.25a.75.75 0 0 1 .75.75v3.75a.75.75 0 0 1-1.5 0V9a.75.75 0 0 1 .75-.75Zm0 8.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Z" clip-rule="evenodd"/></svg> '+esc(d.message)+(d.hint?'<br><small style="color:var(--color-text-muted)">'+esc(d.hint)+'</small>':'');
+  if(isKimi){
+    addKimiSysMsg(html,d.message+(d.hint?'<br>'+d.hint:''));
+  }else{
+    addSysMsg(html,d.message+(d.hint?'<br>'+d.hint:''));
+  }
+}
+
+let kimiCurrentStream='';
+function kimiStreamOut(t){
+  const km=$('kimiMsgs');
+  const ty=$('kimiTyM');if(ty)ty.remove();
+  let sm=$('kimiStreamMsg');
+  if(!sm){
+    sm=document.createElement('div');sm.className='message';sm.id='kimiStreamMsg';
+    sm.innerHTML='<div class="message__avatar message__avatar--claude">K</div><div class="message__content"><div class="message__header"><span class="message__sender">Kimi</span><span class="message__time">Typing...</span></div><div class="message__body" id="kimiStreamB"></div></div>';
+    km.appendChild(sm);
+  }
+  kimiCurrentStream+=t;const b=$('kimiStreamB');if(b)b.innerHTML=fmt(kimiCurrentStream);
+  km.scrollTop=km.scrollHeight;
+}
+function kimiCompOut(d){
+  const sm=$('kimiStreamMsg');if(sm){sm.id='';sm.querySelector('.message__time').textContent=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});}
+  kimiCurrentStream='';
+}
+function kimiAddMsg(role,html){
+  const m=document.createElement('div');m.className='message message--'+role;
+  const n=role==='user'?'You':'Kimi';
+  const av=role==='user'?'U':'K';
+  const time=new Date().toLocaleTimeString('th-TH',{hour:'2-digit',minute:'2-digit'});
+  m.innerHTML='<div class="message__avatar message__avatar--'+role+'">'+av+'</div><div class="message__content"><div class="message__header"><span class="message__sender">'+n+'</span><span class="message__time">'+time+'</span></div><div class="message__body">'+html+'</div></div>';
+  $('kimiMsgs').appendChild(m);$('kimiMsgs').scrollTop=$('kimiMsgs').scrollHeight;
 }
 
 function stopProc(){safeSend({type:'stop',sessionId:sid});resetUI();}
 
+function svgIcon(path,cls){cls=cls||'ev-svg';return'<svg class="'+cls+'" viewBox="0 0 24 24" fill="currentColor"><path d="'+path+'"/></svg>'}
+const ICONS={
+  sparkles:'M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.035.259a3.375 3.375 0 0 0-2.456 2.456ZM16.894 20.567 16.5 21.75l-.394-1.183a2.25 2.25 0 0 0-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 0 0 1.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 0 0 1.423 1.423l1.183.394-1.183.394a2.25 2.25 0 0 0-1.423 1.423Z',
+  lightbulb:'M12 .75a7.5 7.5 0 0 1 7.5 7.5c0 2.537-.99 4.83-2.598 6.548l-.027.027a2.25 2.25 0 0 0-.68 1.603v2.697a.75.75 0 0 1-.75.75h-7.5a.75.75 0 0 1-.75-.75v-2.697a2.25 2.25 0 0 0-.68-1.603l-.027-.027A7.497 7.497 0 0 1 4.5 8.25a7.5 7.5 0 0 1 7.5-7.5zM9.75 19.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5h-3a.75.75 0 0 1-.75-.75z',
+  checkCircle:'M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25z',
+  xCircle:'M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72z',
+  cube:'M12.378 1.602a.75.75 0 0 0-.756 0L3 6.632l9 5.25 9-5.25-8.622-5.03zM21.75 7.93l-9 5.25v8.334l8.265-4.826a.75.75 0 0 0 .485-.65V7.93zM11.25 21.517V13.18l-9-5.25v8.276a.75.75 0 0 0 .485.65l8.515 4.96z',
+  signal:'M18.375 2.25c-1.035 0-1.875.84-1.875 1.875v15.75c0 1.035.84 1.875 1.875 1.875h.75c1.035 0 1.875-.84 1.875-1.875V4.125c0-1.036-.84-1.875-1.875-1.875h-.75zM9.75 8.625c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v11.25c0 1.035-.84 1.875-1.875 1.875h-.75a1.875 1.875 0 0 1-1.875-1.875V8.625zM3 13.125c0-1.036.84-1.875 1.875-1.875h.75c1.036 0 1.875.84 1.875 1.875v6.75c0 1.035-.84 1.875-1.875 1.875h-.75A1.875 1.875 0 0 1 3 19.875v-6.75z',
+  docText:'M5.625 1.5c-1.036 0-1.875.84-1.875 1.875v17.25c0 1.035.84 1.875 1.875 1.875h12.75c1.035 0 1.875-.84 1.875-1.875V12.75A3.75 3.75 0 0 0 16.5 9h-1.875a1.875 1.875 0 0 1-1.875-1.875V5.25A3.75 3.75 0 0 0 9 1.5H5.625ZM7.5 15a.75.75 0 0 1 .75-.75h7.5a.75.75 0 0 1 0 1.5h-7.5A.75.75 0 0 1 7.5 15Zm.75-2.25a.75.75 0 0 0 0 1.5H12a.75.75 0 0 0 0-1.5H8.25Z',
+  coins:'M21 6.375c0 2.692-4.03 4.875-9 4.875S3 9.067 3 6.375 7.03 1.5 12 1.5s9 2.183 9 4.875zm0 0c0 2.692-4.03 4.875-9 4.875S3 9.067 3 6.375 7.03 1.5 12 1.5s9 2.183 9 4.875zM12 12.75c-4.97 0-9-2.183-9-4.875V12c0 2.692 4.03 4.875 9 4.875s9-2.183 9-4.875v-4.125c0 2.692-4.03 4.875-9 4.875zM12 17.25c-4.97 0-9-2.183-9-4.875V16.5c0 2.692 4.03 4.875 9 4.875s9-2.183 9-4.875v-4.125c0 2.692-4.03 4.875-9 4.875z',
+  check:'M19.916 4.626a.75.75 0 0 1 .208 1.04l-9 13.5a.75.75 0 0 1-1.154.114l-6-6a.75.75 0 0 1 1.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 0 1 1.04-.208z',
+  flag:'M3.75 3v16.5a.75.75 0 0 0 1.5 0v-6.75h12.75a.75.75 0 0 0 .53-1.28L12.53 6.47a.75.75 0 0 1 0-1.06l5.97-5.97a.75.75 0 0 0-.53-1.28H5.25a.75.75 0 0 0-.75.75z',
+  bolt:'M14.615 1.595a.75.75 0 0 1 .359.852L12.982 9.75h3.966a.75.75 0 0 1 .612 1.188l-9 13.5a.75.75 0 0 1-1.357-.436l1.992-7.302H3.75a.75.75 0 0 1-.612-1.188l9-13.5a.75.75 0 0 1 .477-.265z',
+  beaker:'M10.5 1.5a.75.75 0 0 0-1.5 0v2.25a.75.75 0 0 0 1.5 0V1.5zM12.75 3.75a.75.75 0 0 1 .75.75v1.5h3.75a.75.75 0 0 1 0 1.5h-3.75v1.5h3.75a.75.75 0 0 1 0 1.5h-3.75v6.75a2.25 2.25 0 0 1-2.25 2.25h-1.5a2.25 2.25 0 0 1-2.25-2.25v-6.75H3a.75.75 0 0 1 0-1.5h3.75v-1.5H3a.75.75 0 0 1 0-1.5h3.75v-1.5a.75.75 0 0 1 .75-.75h3.75v-1.5a.75.75 0 0 1 .75-.75h3z'
+};
 function hKey(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend()}}
 function autoR(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,140)+'px'}
 function fmt(t){
@@ -846,14 +1136,80 @@ function addMsg(role,html){
   $('msgs').appendChild(m);$('msgs').scrollTop=$('msgs').scrollHeight;
 }
 
+function addSysMsg(html,text){
+  addMsg('sys',html);
+  const content=text||(()=>{const t=document.createElement('div');t.innerHTML=html;return t.textContent||t.innerText||'';})();
+  if(content.trim()&&ws&&ws.readyState===1){
+    safeSend({type:'save_message',sessionId:sid,content:content.trim(),role:'system'});
+  }
+}
+
 function renderHistory(messages){
   if(!messages||messages.length===0)return;
+  $('msgs').innerHTML='';
   const w=$('ws');if(w)w.style.display='none';
   messages.forEach(msg=>{
     const role=msg.role;
     if(role==='user')addMsg('user',esc(msg.content));
     else if(role==='assistant')addMsg('claude',fmt(msg.content));
     else addMsg('sys',esc(msg.content));
+  });
+}
+
+function renderKimiHistory(messages){
+  if(!messages||messages.length===0)return;
+  $('kimiMsgs').innerHTML='';
+  const w=$('kimiWs');if(w)w.style.display='none';
+  messages.forEach(msg=>{
+    const role=msg.role;
+    if(role==='user')kimiAddMsg('user',esc(msg.content));
+    else if(role==='assistant')kimiAddMsg('claude',fmt(msg.content));
+    else kimiAddMsg('sys',esc(msg.content));
+  });
+}
+
+function addKimiSysMsg(html,text){
+  kimiAddMsg('sys',html);
+  const content=text||(()=>{const t=document.createElement('div');t.innerHTML=html;return t.textContent||t.innerText||'';})();
+  if(content.trim()&&ws&&ws.readyState===1){
+    safeSend({type:'save_message',sessionId:kimiSid,content:content.trim(),role:'system'});
+  }
+}
+
+function newKimiChat(){
+  kimiSid='k_'+Date.now();
+  history.pushState(null, '', '/kimi-api/'+kimiSid);
+  $('kimiMsgs').innerHTML='<div class="welcome" id="kimiWs"><div class="welcome__logo">K</div><div class="welcome__title">New Kimi Chat</div><div class="welcome__desc">Ask Kimi anything using Moonshot API</div></div>';
+  noti('New Kimi chat started','inf');
+  safeSend({type:'list_sessions',projectPath:$('projP').value||proj.p});
+}
+
+function switchKimiSession(id){
+  kimiSid=id;
+  history.pushState(null, '', '/kimi-api/'+kimiSid);
+  $('kimiMsgs').innerHTML='<div class="welcome" id="kimiWs"><div class="welcome__logo">K</div><div class="welcome__title">Loading...</div><div class="welcome__desc">Restoring Kimi chat history</div></div>';
+  safeSend({type:'load_history',sessionId:kimiSid});
+  noti('Switched Kimi session','inf');
+}
+
+function delKimiS(id){
+  if(!confirm('Delete this Kimi session?'))return;
+  safeSend({type:'delete_session',sessionId:id});
+}
+
+function renderKimiSessions(sessions){
+  const c=$('kimiHistList');if(!c)return;
+  c.innerHTML='';
+  const filtered=(sessions||[]).filter(s=>s.id && s.id.startsWith('k_'));
+  if(filtered.length===0){c.innerHTML='<div style="padding:6px 10px;font-size:12px;color:var(--color-text-muted)">No Kimi history yet</div>';return}
+  filtered.forEach(s=>{
+    const title=(s.title && s.title!=='New Chat')?s.title:s.id.slice(0,12)+'...';
+    const d=document.createElement('div');d.className='sidebar__item';d.style.padding='8px 10px';
+    d.innerHTML='<svg class="icon icon--sm" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4.804 21.644A6.707 6.707 0 0 0 6 21.75a6.721 6.721 0 0 0 3.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 0 1-.814 1.686.75.75 0 0 0 .44 1.223ZM8.25 10.875a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25ZM10.875 12a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875-1.125a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25Z" clip-rule="evenodd"/></svg><span class="sidebar__item-text" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(title)+'</span><button class="btn btn--ghost btn--icon-sm" style="margin-left:auto;opacity:0" onclick="event.stopPropagation();delKimiS(\''+s.id+'\')" title="Delete"><svg class="icon icon--sm" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 0 1 3.878.512.75.75 0 1 1-.256 1.478l-.209-.035-1.005 13.07a3 3 0 0 1-2.991 2.77H8.084a3 3 0 0 1-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 0 1-.256-1.478A48.567 48.567 0 0 1 7.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.923a49.19 49.19 0 0 1 3.368 0c1.603.023 2.816 1.359 2.816 2.923ZM10.5 6v.75a.75.75 0 0 0 .75.75h1.5a.75.75 0 0 0 .75-.75V6a.75.75 0 0 0-.75-.75h-1.5A.75.75 0 0 0 10.5 6Zm-1.2 13.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5h-3a.75.75 0 0 1-.75-.75Zm.75-3.75a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" clip-rule="evenodd"/></svg></button>';
+    d.onclick=()=>switchKimiSession(s.id);
+    d.onmouseenter=()=>{const b=d.querySelector('button');if(b)b.style.opacity='1'};
+    d.onmouseleave=()=>{const b=d.querySelector('button');if(b)b.style.opacity='0'};
+    c.appendChild(d);
   });
 }
 
@@ -866,7 +1222,20 @@ function showTyp(){
 
 function toggleS(){
   const sb=$('sidebar');
-  sb.classList.toggle('sidebar--expanded');
+  const isExpanded=sb.classList.toggle('sidebar--expanded');
+  localStorage.setItem('ccui-sidebar',isExpanded?'expanded':'collapsed');
+}
+
+function loadSidebarState(){
+  if(window.innerWidth<768)return;
+  const state=localStorage.getItem('ccui-sidebar');
+  const sb=$('sidebar');
+  if(state===null||state==='expanded'){
+    sb.classList.add('sidebar--expanded');
+    localStorage.setItem('ccui-sidebar','expanded');
+  }else{
+    sb.classList.remove('sidebar--expanded');
+  }
 }
 
 function toggleR(){
@@ -880,7 +1249,18 @@ function toggleDrawer(show){
   else{ov.classList.remove('drawer-overlay--open');sb.style.position='';sb.style.left='';sb.style.top='';sb.style.bottom='';sb.style.zIndex='';sb.classList.remove('sidebar--expanded');if(window.innerWidth>=768){sb.style.display='flex'}else{sb.style.display='none'}}
 }
 
-function switchV(view,el){
+function switchV(view,el,pushState=true){
+  // Update URL
+  if(pushState){
+    if(view==='chat' && sid){
+      if(location.pathname !== '/chat/'+sid) history.pushState(null, '', '/chat/'+sid);
+    }else if(view==='kimi-api' && kimiSid){
+      if(location.pathname !== '/kimi-api/'+kimiSid) history.pushState(null, '', '/kimi-api/'+kimiSid);
+    }else if(location.pathname !== '/'+view){
+      history.pushState(null, '', '/'+view);
+    }
+  }
+  
   // Close right panel when switching views on mobile
   if(window.innerWidth<1280)$('rightP').classList.remove('right-panel--open');
   
@@ -904,8 +1284,10 @@ function switchV(view,el){
 function setMode(m){chatMode=m;$('modeChat').classList.toggle('input-bar__mode--active',m==='chat');$('modeCode').classList.toggle('input-bar__mode--active',m==='code')}
 
 function newChat(){
+  sid='s_'+Date.now();
+  history.pushState(null, '', '/chat/'+sid);
   $('msgs').innerHTML='<div class="welcome" id="ws"><div class="welcome__logo">C</div><div class="welcome__title">New Chat Ready</div><div class="welcome__desc">Type a message or pick an action above</div></div>';
-  sid='s_'+Date.now();noti('New chat started','inf');
+  noti('New chat started','inf');
   safeSend({type:'list_sessions',projectPath:$('projP').value||proj.p});
 }
 
@@ -935,8 +1317,9 @@ function drawBreadcrumb(path){
 
 function renderSessions(sessions){
   const c=$('histList');c.innerHTML='';
-  if(!sessions||sessions.length===0){c.innerHTML='<div style="padding:6px 10px;font-size:12px;color:var(--color-text-muted)">No history yet</div>';return}
-  sessions.forEach(s=>{
+  const filtered=(sessions||[]).filter(s=>!s.id || !s.id.startsWith('k_'));
+  if(filtered.length===0){c.innerHTML='<div style="padding:6px 10px;font-size:12px;color:var(--color-text-muted)">No history yet</div>';return}
+  filtered.forEach(s=>{
     const d=document.createElement('div');d.className='sidebar__item';d.style.padding='8px 10px';
     d.innerHTML='<svg class="icon icon--sm" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M4.804 21.644A6.707 6.707 0 0 0 6 21.75a6.721 6.721 0 0 0 3.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 0 1-.814 1.686.75.75 0 0 0 .44 1.223ZM8.25 10.875a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25ZM10.875 12a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875-1.125a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25Z" clip-rule="evenodd"/></svg><span class="sidebar__item-text" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(s.title||'Untitled')+'</span><button class="btn btn--ghost btn--icon-sm" style="margin-left:auto;opacity:0" onclick="event.stopPropagation();delS(\''+s.id+'\')" title="Delete"><svg class="icon icon--sm" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M16.5 4.478v.227a48.816 48.816 0 0 1 3.878.512.75.75 0 1 1-.256 1.478l-.209-.035-1.005 13.07a3 3 0 0 1-2.991 2.77H8.084a3 3 0 0 1-2.991-2.77L4.087 6.66l-.209.035a.75.75 0 0 1-.256-1.478A48.567 48.567 0 0 1 7.5 4.705v-.227c0-1.564 1.213-2.9 2.816-2.923a49.19 49.19 0 0 1 3.368 0c1.603.023 2.816 1.359 2.816 2.923ZM10.5 6v.75a.75.75 0 0 0 .75.75h1.5a.75.75 0 0 0 .75-.75V6a.75.75 0 0 0-.75-.75h-1.5A.75.75 0 0 0 10.5 6Zm-1.2 13.5a.75.75 0 0 1 .75-.75h3a.75.75 0 0 1 0 1.5h-3a.75.75 0 0 1-.75-.75Zm.75-3.75a.75.75 0 0 0 0 1.5h3a.75.75 0 0 0 0-1.5h-3Z" clip-rule="evenodd"/></svg></button>';
     d.onclick=()=>switchSession(s.id);
@@ -948,6 +1331,7 @@ function renderSessions(sessions){
 
 function switchSession(id){
   sid=id;
+  history.pushState(null, '', '/chat/'+sid);
   $('msgs').innerHTML='<div class="welcome" id="ws"><div class="welcome__logo">C</div><div class="welcome__title">Loading...</div><div class="welcome__desc">Restoring chat history</div></div>';
   safeSend({type:'load_history',sessionId:sid});
   noti('Switched session','inf');
@@ -956,6 +1340,48 @@ function switchSession(id){
 function delS(id){
   if(!confirm('Delete this session?'))return;
   safeSend({type:'delete_session',sessionId:id});
+}
+
+function renderClaudeSessions(sessions){
+  const c=$('claudeList');c.innerHTML='';
+  if(!sessions||sessions.length===0){c.innerHTML='<div style="padding:6px 10px;font-size:12px;color:var(--color-text-muted)">No Claude sessions</div>';return}
+  sessions.forEach(s=>{
+    const d=document.createElement('div');d.className='sidebar__item';d.style.padding='8px 10px';
+    const date=new Date(s.mtime).toLocaleDateString('th-TH',{month:'short',day:'numeric'});
+    d.innerHTML='<svg class="icon icon--sm" viewBox="0 0 24 24" style="color:var(--color-brand)"><path fill-rule="evenodd" d="M4.804 21.644A6.707 6.707 0 0 0 6 21.75a6.721 6.721 0 0 0 3.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 0 1-.814 1.686.75.75 0 0 0 .44 1.223ZM8.25 10.875a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25ZM10.875 12a1.125 1.125 0 1 1 2.25 0 1.125 1.125 0 0 1-2.25 0Zm4.875-1.125a1.125 1.125 0 1 0 0 2.25 1.125 1.125 0 0 0 0-2.25Z" clip-rule="evenodd"/></svg><span class="sidebar__item-text" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(s.title||s.id.slice(0,8))+'</span><span style="margin-left:auto;font-size:10px;color:var(--color-text-muted)">'+date+'</span>';
+    d.onclick=()=>loadClaudeSession(s.id);
+    c.appendChild(d);
+  });
+}
+
+function loadClaudeSession(id){
+  if(!ws||ws.readyState!==1){noti('Server not connected','err');return}
+  $('msgs').innerHTML='<div class="welcome" id="ws"><div class="welcome__logo">C</div><div class="welcome__title">Loading Claude session...</div><div class="welcome__desc">'+esc(id.slice(0,16))+'</div></div>';
+  safeSend({type:'load_claude_session',sessionId:id,projectPath:$('projP').value||proj.p});
+}
+
+function renderClaudeSessionContent(data){
+  const messages=data.messages||[];
+  if(messages.length===0){noti('No messages in this session','inf');return}
+  $('msgs').innerHTML='';
+  const w=$('ws');if(w)w.style.display='none';
+  messages.forEach(msg=>{
+    if(msg.role==='user')addMsg('user',esc(msg.content));
+    else if(msg.role==='assistant'){addMsg('assistant','');streamOut(esc(msg.content))}
+  });
+  // Add resume hint
+  const hint=document.createElement('div');
+  hint.className='welcome';
+  hint.innerHTML='<div class="welcome__desc" style="margin-top:8px">Claude Native Session — <button class="btn btn--primary btn--sm" onclick="resumeClaudeSession(\''+data.sessionId+'\')">Resume in PTY</button></div>';
+  $('msgs').appendChild(hint);
+  $('msgs').scrollTop=$('msgs').scrollHeight;
+  noti('Loaded Claude session','suc');
+}
+
+function resumeClaudeSession(id){
+  if(!ws||ws.readyState!==1){noti('Server not connected','err');return}
+  noti('Open Interactive mode to continue this session','inf');
+  switchV('pty',document.querySelector('.sidebar__item[data-v="pty"]'));
 }
 
 function drawTree(files){
@@ -1003,8 +1429,18 @@ function closeM(id){$(id).classList.remove('modal--open')}
 
 function noti(text,type){
   const n=$('notif');$('nT').textContent=text;
-  n.className='notif notif--'+(type||'inf');
-  setTimeout(()=>n.classList.remove('notif--show'),3000);
+  const ni=$('nI');
+  const t=type||'inf';
+  n.className='notif notif--show notif--'+t;
+  if(t==='err'){
+    ni.innerHTML='<svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25Zm-1.72 6.97a.75.75 0 1 0-1.06 1.06L10.94 12l-1.72 1.72a.75.75 0 1 0 1.06 1.06L12 13.06l1.72 1.72a.75.75 0 1 0 1.06-1.06L13.06 12l1.72-1.72a.75.75 0 1 0-1.06-1.06L12 10.94l-1.72-1.72Z" clip-rule="evenodd"/></svg>';
+  }else if(t==='suc'){
+    ni.innerHTML='<svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clip-rule="evenodd"/></svg>';
+  }else{
+    ni.innerHTML='<svg class="icon icon--lg" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm8.706-1.442c1.146-.573 2.437.463 2.5 1.208.064.745-.692 1.596-1.588 1.596-.631 0-1.128-.396-1.2-.9-.072-.505.396-1.015 1.2-1.015.806 0 1.152.46 1.152.9 0 .44-.346.9-1.152.9-.806 0-1.152-.46-1.152-.9 0-.44.346-.9 1.152-.9Zm-.348 4.192a.75.75 0 1 0-1.5 0v3a.75.75 0 0 0 1.5 0v-3Z" clip-rule="evenodd"/></svg>';
+  }
+  if(n._t){clearTimeout(n._t)}
+  n._t=setTimeout(()=>n.classList.remove('notif--show'),3000);
 }
 
 // Mobile menu button
@@ -1027,17 +1463,31 @@ function startPTY(){
   fitAddon=new FitAddon.FitAddon();
   term.loadAddon(fitAddon);
   term.open(el);
+  
+  // PTY Keyboard Focus: ensure Ctrl+C/D/Z go to PTY, not browser
+  term.attachCustomKeyEventHandler((e)=>{
+    if(e.type!=='keydown')return true;
+    if(e.ctrlKey&&['c','d','z'].includes(e.key.toLowerCase())){
+      return false; // Let xterm handle it (sends \x03, \x04, \x1A to PTY)
+    }
+    return true;
+  });
+  
   fitAddon.fit();
   
   term.onData(d=>{safeSend({type:'pty_input',input:d,sessionId:sid});});
   
   const dims=fitAddon.proposeDimensions();
+  const ptyProvider=$('providerSel')?$('providerSel').value:'claude';
+  const ptyCustomCmd=$('customCmd')?$('customCmd').value:'';
   safeSend({
     type:'chat',
     message:'',
     sessionId:sid,
     projectPath:$('projP').value||proj.p,
     mode:'pty',
+    provider:ptyProvider,
+    customCmd:ptyCustomCmd,
     cols:Math.floor(dims.cols)||80,
     rows:Math.floor(dims.rows)||24
   });
@@ -1062,6 +1512,45 @@ function stopPTYUI(){
   if(term){term.dispose();term=null}
   $('ptyTerm').innerHTML='';
   window.removeEventListener('resize',resizePTY);
+}
+
+function sendKimiAPI(){
+  const inp=$('kimiInp');
+  const txt=inp.value.trim();if(!txt)return;
+  const apiKey=$('kimiApiKey').value.trim()||localStorage.getItem('ccui-kimi-key')||'';
+  const model=$('kimiModel').value||localStorage.getItem('ccui-kimi-model')||'kimi-k2.5';
+  if(!apiKey){noti('Please enter Kimi API Key in Settings','err');return}
+  if(apiKey.length<20 || !apiKey.startsWith('sk-')){noti('API Key format invalid. Get a real key from platform.moonshot.cn','err');return}
+  if(!ws||ws.readyState!==1){noti('Server not connected','err');return}
+  // Ensure kimiSid exists
+  if(!kimiSid){kimiSid='k_'+Date.now();history.pushState(null,'','/kimi-api/'+kimiSid);}
+  kimiAddMsg('user',esc(txt));
+  const ty=document.createElement('div');ty.className='message';ty.id='kimiTyM';
+  ty.innerHTML='<div class="message__avatar message__avatar--claude">K</div><div class="message__content"><div class="message__header"><span class="message__sender">Kimi</span><span class="message__time">Typing...</span></div><div class="typing"><span></span><span></span><span></span></div></div>';
+  $('kimiMsgs').appendChild(ty);$('kimiMsgs').scrollTop=$('kimiMsgs').scrollHeight;
+  safeSend({type:'kimi_api_chat',message:txt,sessionId:kimiSid,apiKey,model,projectPath:$('projP').value||proj.p});
+  inp.value='';autoR(inp);
+}
+
+function loadKimiSettings(){
+  const key=localStorage.getItem('ccui-kimi-key')||'';
+  const model=localStorage.getItem('ccui-kimi-model')||'moonshot-v1-8k';
+  const keyInput=$('kimiApiKey');if(keyInput)keyInput.value=key;
+  const modelSel=$('kimiModel');if(modelSel)modelSel.value=model;
+}
+
+function saveKimiSettings(){
+  const key=$('kimiApiKey').value.trim();
+  const model=$('kimiModel').value;
+  if(key && (!key.startsWith('sk-') || key.length<20)){
+    noti('API Key format looks invalid. Real keys start with sk- and are 40+ chars','err');
+    return;
+  }
+  localStorage.setItem('ccui-kimi-key',key);
+  localStorage.setItem('ccui-kimi-model',model);
+  const st=$('kimiSaveStatus');
+  if(st){st.textContent='Saved!';st.style.color='var(--color-success)';setTimeout(()=>{st.textContent='';st.style.color=''},2000);}
+  noti('Kimi settings saved','suc');
 }
 
 function exportPTYLog(){
@@ -1223,13 +1712,49 @@ function setProject(newPath){
 
 window.addEventListener('keydown',e=>{
   if(e.ctrlKey&&e.key==='b'){e.preventDefault();toggleS()}
-  if(e.ctrlKey&&e.key==='n'){e.preventDefault();newChat()}
+  if(e.ctrlKey&&e.key==='n'){e.preventDefault();if(document.querySelector('.page-kimi-api.page--active')){newKimiChat()}else{newChat()}}
+});
+
+function routeFromPath(){
+  const path=location.pathname.replace(/^\/+/,'')||'chat';
+  const segments=path.split('/').filter(Boolean);
+  const view=segments[0]||'chat';
+  const validViews=['chat','files','term','pty','settings','kimi-api'];
+  if(validViews.includes(view)){
+    if(view==='chat' && segments[1]){
+      // /chat/:sessionId - restore specific chat
+      sid=segments[1];
+      switchV('chat',null,false);
+      $('msgs').innerHTML='<div class="welcome" id="ws"><div class="welcome__logo">C</div><div class="welcome__title">Loading...</div><div class="welcome__desc">Restoring chat history</div></div>';
+      if(ws&&ws.readyState===1){safeSend({type:'load_history',sessionId:sid});}else{pendingLoadHistory=sid;}
+    }else if(view==='kimi-api' && segments[1]){
+      // /kimi-api/:sessionId - restore specific kimi chat
+      kimiSid=segments[1];
+      switchV('kimi-api',null,false);
+      $('kimiMsgs').innerHTML='<div class="welcome" id="kimiWs"><div class="welcome__logo">K</div><div class="welcome__title">Loading...</div><div class="welcome__desc">Restoring Kimi chat history</div></div>';
+      if(ws&&ws.readyState===1){safeSend({type:'load_history',sessionId:kimiSid});}else{pendingLoadHistory=kimiSid;}
+    }else{
+      switchV(view,null,false);
+      if(view==='chat' && !sid) sid='s_'+Date.now();
+      if(view==='kimi-api' && !kimiSid) kimiSid='k_'+Date.now();
+    }
+  }else{
+    switchV('chat',null,false);
+  }
+}
+
+window.addEventListener('popstate',()=>{
+  routeFromPath();
 });
 
 document.addEventListener('DOMContentLoaded',()=>{
   const oldFm=document.getElementById('fileModal');if(oldFm)oldFm.remove();
   conn();
   loadTheme();
+  loadProvider();
+  loadSidebarState();
+  loadKimiSettings();
+  routeFromPath();
   // Mobile keyboard handling
   const inp=$('inp');
   if(inp){
@@ -1273,6 +1798,27 @@ function loadTheme(){
     const cur=localStorage.getItem('ccui-theme')||'auto';
     if(cur==='auto')applyTheme('auto');
   });
+}
+
+function setProvider(p){
+  localStorage.setItem('ccui-provider',p);
+  const row=$('customCmdRow');
+  if(row)row.style.display=p==='custom'?'flex':'none';
+}
+
+function loadProvider(){
+  const p=localStorage.getItem('ccui-provider')||'claude';
+  const sel=$('providerSel');if(sel)sel.value=p;
+  const row=$('customCmdRow');
+  if(row)row.style.display=p==='custom'?'flex':'none';
+  const custom=$('customCmd');
+  if(custom)custom.value=localStorage.getItem('ccui-custom-cmd')||'';
+}
+
+// Save custom cmd on input
+function saveCustomCmd(){
+  const v=$('customCmd');
+  if(v)localStorage.setItem('ccui-custom-cmd',v.value);
 }
 </script>
 </body>

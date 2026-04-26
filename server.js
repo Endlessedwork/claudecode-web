@@ -4,6 +4,7 @@
 
 const express = require('express');
 const http = require('http');
+const https = require('https');
 const WebSocket = require('ws');
 const { spawn } = require('child_process');
 const path = require('path');
@@ -17,8 +18,112 @@ const wss = new WebSocket.Server({ server });
 
 app.use(express.static(path.join(__dirname, 'public')));
 
+// SPA fallback: serve index.html for all non-API routes
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 const activeSessions = new Map();
 let currentProjectPath = process.cwd();
+const PTY_LOG_DIR = path.join(__dirname, 'pty-logs');
+if (!fs.existsSync(PTY_LOG_DIR)) fs.mkdirSync(PTY_LOG_DIR, { recursive: true });
+
+const CLAUDE_DATA_DIR = path.join(require('os').homedir(), '.claude');
+
+function encodeClaudeProjectPath(projectPath) {
+  return projectPath.replace(/\//g, '-');
+}
+
+function getClaudeProjectDir(projectPath) {
+  const encoded = encodeClaudeProjectPath(projectPath);
+  return path.join(CLAUDE_DATA_DIR, 'projects', encoded);
+}
+
+function getClaudeSessions(projectPath) {
+  const dir = getClaudeProjectDir(projectPath);
+  if (!fs.existsSync(dir)) return [];
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch (e) {
+    console.error('[Claude Sessions] readdir error:', e.message);
+    return [];
+  }
+  const sessions = [];
+  for (const entry of entries) {
+    if (!entry.isFile() || !entry.name.endsWith('.jsonl')) continue;
+    const sessionId = entry.name.slice(0, -6); // remove .jsonl
+    const filePath = path.join(dir, entry.name);
+    const stat = fs.statSync(filePath);
+    // Try to get title from first user message
+    let title = sessionId.slice(0, 8) + '...';
+    try {
+      const fd = fs.openSync(filePath, 'r');
+      const buffer = Buffer.alloc(4096);
+      const bytesRead = fs.readSync(fd, buffer, 0, 4096, 0);
+      fs.closeSync(fd);
+      const chunk = buffer.toString('utf8', 0, bytesRead);
+      const lines = chunk.split('\n').filter(l => l.trim());
+      for (const line of lines) {
+        try {
+          const obj = JSON.parse(line);
+          if (obj.type === 'user' && obj.message?.content) {
+            const text = typeof obj.message.content === 'string'
+              ? obj.message.content
+              : JSON.stringify(obj.message.content).slice(0, 60);
+            title = text.slice(0, 60);
+            break;
+          }
+          if (obj.type === 'queue-operation' && obj.content) {
+            title = obj.content.slice(0, 60);
+            break;
+          }
+        } catch (e) {}
+      }
+    } catch (e) {}
+    sessions.push({
+      id: sessionId,
+      title,
+      mtime: stat.mtimeMs,
+      size: stat.size
+    });
+  }
+  sessions.sort((a, b) => b.mtime - a.mtime);
+  return sessions;
+}
+
+function loadClaudeSession(projectPath, sessionId, maxLines = 500) {
+  const dir = getClaudeProjectDir(projectPath);
+  const filePath = path.join(dir, sessionId + '.jsonl');
+  if (!fs.existsSync(filePath)) return null;
+  const content = fs.readFileSync(filePath, 'utf8');
+  const allLines = content.split('\n').filter(l => l.trim());
+  const lines = allLines.slice(-maxLines); // take last N lines to avoid huge files
+  const messages = [];
+  for (const line of lines) {
+    try {
+      const obj = JSON.parse(line);
+      if (obj.type === 'user' && obj.message?.content) {
+        const text = typeof obj.message.content === 'string'
+          ? obj.message.content
+          : JSON.stringify(obj.message.content);
+        messages.push({ role: 'user', content: text, timestamp: obj.timestamp });
+      } else if (obj.type === 'assistant' && obj.message?.content) {
+        let text = '';
+        if (typeof obj.message.content === 'string') {
+          text = obj.message.content;
+        } else if (Array.isArray(obj.message.content)) {
+          text = obj.message.content
+            .filter(c => c.type === 'text')
+            .map(c => c.text)
+            .join('\n');
+        }
+        if (text) messages.push({ role: 'assistant', content: text, timestamp: obj.timestamp });
+      }
+    } catch (e) {}
+  }
+  return { sessionId, messages };
+}
 
 // SQLite setup
 const db = new Database(path.join(__dirname, 'chat.db'));
@@ -40,11 +145,28 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_messages_session ON messages(session_id, created_at);
 `);
 
+// Migrate: add claude_session_id column if not exists
+const hasColumn = db.prepare(`SELECT COUNT(*) as c FROM pragma_table_info('sessions') WHERE name = 'claude_session_id'`).get().c;
+if (hasColumn === 0) {
+  db.exec(`ALTER TABLE sessions ADD COLUMN claude_session_id TEXT`);
+  console.log('[DB] Migrated: added claude_session_id column');
+}
+
 function ensureSession(sessionId, projectPath) {
   const existing = db.prepare('SELECT id FROM sessions WHERE id = ?').get(sessionId);
   if (!existing) {
     db.prepare('INSERT INTO sessions (id, project_path, title) VALUES (?, ?, ?)').run(sessionId, projectPath, 'New Chat');
   }
+}
+
+function getClaudeSessionId(sessionId) {
+  const row = db.prepare('SELECT claude_session_id FROM sessions WHERE id = ?').get(sessionId);
+  return row ? row.claude_session_id : null;
+}
+
+function updateClaudeSessionId(sessionId, claudeSessionId) {
+  if (!claudeSessionId) return;
+  db.prepare('UPDATE sessions SET claude_session_id = ? WHERE id = ?').run(claudeSessionId, sessionId);
 }
 
 function saveMessage(sessionId, role, content) {
@@ -93,6 +215,7 @@ wss.on('connection', (ws) => {
   ws.on('message', (msg) => {
     try {
       const text = Buffer.isBuffer(msg) ? msg.toString('utf8') : msg;
+      console.log('[WS RAW]', text.slice(0, 200));
       const data = JSON.parse(text);
       handleMessage(ws, data);
     } catch (e) {
@@ -136,7 +259,32 @@ function handleMessage(ws, data) {
     case 'delete_session': handleDeleteSession(ws, data); break;
     case 'choose_folder': handleChooseFolder(ws); break;
     case 'set_project': handleSetProject(ws, data); break;
+    case 'list_claude_sessions': handleListClaudeSessions(ws, data, projectPath); break;
+    case 'load_claude_session': handleLoadClaudeSession(ws, data, projectPath); break;
+    case 'save_message': handleSaveMessage(ws, data, projectPath); break;
+    case 'kimi_api_chat': handleKimiAPIChat(ws, data, projectPath); break;
     default: ws.send(JSON.stringify({ type: 'error', data: { message: `ไม่รู้จักคำสั่ง: ${data.type}` } }));
+  }
+}
+
+function handleListClaudeSessions(ws, data, projectPath) {
+  try {
+    const sessions = getClaudeSessions(projectPath);
+    ws.send(JSON.stringify({ type: 'claude_sessions', data: { sessions, projectPath } }));
+  } catch (e) {
+    ws.send(JSON.stringify({ type: 'error', data: { message: 'Failed to list Claude sessions: ' + e.message } }));
+  }
+}
+
+function handleLoadClaudeSession(ws, data, projectPath) {
+  try {
+    const result = loadClaudeSession(projectPath, data.sessionId, data.limit || 500);
+    if (!result) {
+      return ws.send(JSON.stringify({ type: 'error', data: { message: 'Session not found: ' + data.sessionId } }));
+    }
+    ws.send(JSON.stringify({ type: 'claude_session_content', data: result }));
+  } catch (e) {
+    ws.send(JSON.stringify({ type: 'error', data: { message: 'Failed to load Claude session: ' + e.message } }));
   }
 }
 
@@ -226,6 +374,19 @@ function buildContextPrompt(sessionId, currentMessage, mode = 'chat', maxChars =
   return context;
 }
 
+function resolveCliCommand(provider, customCmd, isPTY) {
+  switch (provider) {
+    case 'mock': return 'node';
+    case 'kimi': {
+      const kimiDir = '/Users/alone/.local/share/uv/tools/kimi-cli';
+      return isPTY ? `cd ${kimiDir} && bin/python3 -m kimi_cli term` : `cd ${kimiDir} && bin/python3 -m kimi_cli`;
+    }
+    case 'custom': return customCmd || process.env.CLAUDE_CMD || 'claude';
+    case 'claude':
+    default: return process.env.CLAUDE_CMD || 'claude';
+  }
+}
+
 function handleChat(ws, data, projectPath) {
   const sessionId = data.sessionId || 'default';
   const session = activeSessions.get(sessionId);
@@ -257,35 +418,170 @@ function handleChat(ws, data, projectPath) {
     activeSessions.get(sessionId).process?.kill();
   }
 
-  ws.send(JSON.stringify({ type: 'status', data: { status: 'starting', message: 'กำลังเรียก Claude...' } }));
+  const providerLabel = data.provider && data.provider !== 'claude' ? data.provider : 'Claude';
+  ws.send(JSON.stringify({ type: 'status', data: { status: 'starting', message: `กำลังเรียก ${providerLabel}...` } }));
 
-  const prompt = buildContextPrompt(sessionId, data.message || '', data.mode || 'chat');
-  const cliCmd = process.env.CLAUDE_CMD || 'claude';
-  const proc = spawn(cliCmd, ['--print', prompt], {
+  const cliCmd = resolveCliCommand(data.provider, data.customCmd);
+  const isClaude = !data.provider || data.provider === 'claude' || data.provider === 'mock';
+  
+  // For Claude CLI, use stream-json mode with resume
+  let claudeSessionId = null;
+  let prompt;
+  let args, env;
+  if (data.provider === 'mock') {
+    // Mock provider: run local mock script
+    prompt = data.message || 'Hello';
+    args = [path.join(__dirname, 'mock-claude.js'), prompt];
+    env = { ...process.env };
+  } else if (isClaude) {
+    claudeSessionId = getClaudeSessionId(sessionId);
+    if (claudeSessionId) {
+      // If we have a Claude session ID, just send the new message (resume handles context)
+      prompt = data.message || '';
+    } else {
+      // No Claude session yet, build context from our DB
+      prompt = buildContextPrompt(sessionId, data.message || '', data.mode || 'chat');
+    }
+    args = ['--print', '--output-format', 'stream-json'];
+    if (claudeSessionId) {
+      args.push('--resume', claudeSessionId);
+    }
+    args.push(prompt);
+    env = { ...process.env };
+  } else {
+    // Non-Claude: use traditional context prompt
+    prompt = buildContextPrompt(sessionId, data.message || '', data.mode || 'chat');
+    args = ['--print', prompt];
+    env = { ...process.env, FORCE_COLOR: '0', CLICOLOR_FORCE: '0' };
+  }
+  
+  const proc = spawn(cliCmd, args, {
     cwd: projectPath,
-    env: { ...process.env, FORCE_COLOR: '0', CLICOLOR_FORCE: '0' },
+    env,
     stdio: ['ignore', 'pipe', 'pipe']
   });
 
   let buffer = '';
+  let streamBuffer = ''; // for NDJSON line buffering
+  let capturedClaudeSessionId = claudeSessionId;
+  
+  function safeSendWS(obj) {
+    try {
+      ws.send(JSON.stringify(obj));
+    } catch (e) {
+      console.error('[WS send error]', e.message, 'object keys:', Object.keys(obj));
+    }
+  }
+
   proc.stdout.on('data', chunk => {
     const text = chunk.toString();
-    buffer += text;
-    ws.send(JSON.stringify({ type: 'stream', data: { text, sessionId } }));
+    
+    if (isClaude && !capturedClaudeSessionId) {
+      // Try to capture session_id from first chunk
+      const m = text.match(/"session_id"\s*:\s*"([^"]+)"/);
+      if (m && m[1]) {
+        capturedClaudeSessionId = m[1];
+        updateClaudeSessionId(sessionId, capturedClaudeSessionId);
+        safeSendWS({ type: 'claude_session_linked', data: { sessionId, claudeSessionId: capturedClaudeSessionId } });
+      }
+    }
+    
+    if (isClaude) {
+      // Parse NDJSON stream
+      streamBuffer += text;
+      let lines = streamBuffer.split('\n');
+      streamBuffer = lines.pop(); // keep incomplete line for next chunk
+      console.log('[NDJSON] lines to parse:', lines.length, 'buffer remaining:', streamBuffer.length);
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const event = JSON.parse(line);
+          console.log('[NDJSON] parsed event type:', event.type, '| keys:', Object.keys(event).join(','));
+          // Forward structured events to client
+          if (event.type === 'assistant' && event.message?.content) {
+            const blocks = Array.isArray(event.message.content)
+              ? event.message.content
+              : [{ type: 'text', text: event.message.content }];
+            for (const block of blocks) {
+              if (block.type === 'text' && block.text) {
+                buffer += block.text;
+                safeSendWS({ type: 'stream', data: { text: block.text, sessionId } });
+              } else if (block.type === 'thinking' && block.thinking) {
+                safeSendWS({ type: 'stream_event', data: { event: 'thinking', text: block.thinking, raw: line, sessionId } });
+              }
+            }
+          } else if (event.type === 'result') {
+            // Sanitize usage to avoid circular refs or huge objects
+            let usageStr = null;
+            try { usageStr = event.usage ? JSON.stringify(event.usage).slice(0, 2000) : null; } catch(e) {}
+            safeSendWS({ type: 'stream_event', data: { event: 'result', result: event.result, usage: usageStr, cost: event.total_cost_usd, raw: line, sessionId } });
+          } else if (event.type === 'error') {
+            safeSendWS({ type: 'stream_event', data: { event: 'error', error: event.error || event.message, raw: line, sessionId } });
+          } else {
+            // Forward all other events as raw for debug view
+            safeSendWS({ type: 'stream_event', data: { event: event.type, raw: line, sessionId } });
+          }
+          // Capture session_id from any event if not yet captured
+          if (!capturedClaudeSessionId && event.session_id) {
+            capturedClaudeSessionId = event.session_id;
+            updateClaudeSessionId(sessionId, capturedClaudeSessionId);
+            safeSendWS({ type: 'claude_session_linked', data: { sessionId, claudeSessionId: capturedClaudeSessionId } });
+          }
+        } catch (e) {
+          console.log('[NDJSON] parse failed:', e.message, 'line:', line.slice(0, 100));
+          // Not valid JSON, ignore or send as plain text for backward compat
+          safeSendWS({ type: 'stream', data: { text: line + '\n', sessionId } });
+        }
+      }
+    } else {
+      // Non-Claude provider: plain text mode
+      buffer += text;
+      safeSendWS({ type: 'stream', data: { text, sessionId } });
+    }
   });
 
   proc.stderr.on('data', chunk => {
-    ws.send(JSON.stringify({ type: 'stderr', data: { text: chunk.toString(), sessionId } }));
+    safeSendWS({ type: 'stderr', data: { text: chunk.toString(), sessionId } });
   });
 
   proc.on('error', err => {
-    ws.send(JSON.stringify({ type: 'error', data: { message: `เรียก Claude ไม่ได้: ${err.message}\nตรวจสอบ: npm install -g @anthropic-ai/claude-code`, hint: 'ติดตั้ง CLI หรือตั้งค่า CLAUDE_CMD ใน environment' } }));
+    safeSendWS({ type: 'error', data: { message: `เรียก Claude ไม่ได้: ${err.message}\nตรวจสอบ: npm install -g @anthropic-ai/claude-code`, hint: 'ติดตั้ง CLI หรือตั้งค่า CLAUDE_CMD ใน environment' } });
   });
 
   proc.on('close', code => {
     activeSessions.delete(sessionId);
+    // Flush remaining buffer lines
+    if (streamBuffer.trim()) {
+      const remainingLines = streamBuffer.split('\n');
+      for (const line of remainingLines) {
+        if (!line.trim()) continue;
+        try {
+          const event = JSON.parse(line);
+          if (event.type === 'result') {
+            buffer = event.result || buffer;
+          }
+          if (event.type === 'assistant' && event.message?.content) {
+            const blocks = Array.isArray(event.message.content)
+              ? event.message.content
+              : [{ type: 'text', text: event.message.content }];
+            for (const block of blocks) {
+              if (block.type === 'text' && block.text) {
+                buffer += block.text;
+                safeSendWS({ type: 'stream', data: { text: block.text, sessionId } });
+              } else if (block.type === 'thinking' && block.thinking) {
+                safeSendWS({ type: 'stream_event', data: { event: 'thinking', text: block.thinking, raw: line, sessionId } });
+              }
+            }
+          } else {
+            safeSendWS({ type: 'stream_event', data: { event: event.type, raw: line, sessionId } });
+          }
+        } catch (e) {
+          safeSendWS({ type: 'stream', data: { text: line + '\n', sessionId } });
+        }
+      }
+    }
     saveMessage(sessionId, 'assistant', buffer);
-    ws.send(JSON.stringify({ type: 'complete', data: { output: buffer, code, sessionId } }));
+    safeSendWS({ type: 'complete', data: { output: buffer, code, sessionId } });
   });
 
   activeSessions.set(sessionId, { process: proc, ws, isPTY: false });
@@ -297,12 +593,17 @@ function startPTY(ws, data, projectPath) {
   if (activeSessions.has(sessionId)) {
     const old = activeSessions.get(sessionId);
     if (old.process) old.process.kill();
+    if (old.logStream) { old.logStream.end(); old.logStream = null; }
+    if (old.healthCheck) { clearInterval(old.healthCheck); old.healthCheck = null; }
   }
 
-  ws.send(JSON.stringify({ type: 'status', data: { status: 'starting', message: 'กำลังเปิด Claude Interactive...' } }));
+  const providerLabel = data.provider === 'kimi' ? 'Kimi' : 'Claude';
+  ws.send(JSON.stringify({ type: 'status', data: { status: 'starting', message: `กำลังเปิด ${providerLabel} Interactive...` } }));
 
-  const cliCmd = process.env.CLAUDE_CMD || 'claude';
+  const cliCmd = resolveCliCommand(data.provider, data.customCmd, true);
   const shell = process.platform === 'win32' ? 'powershell.exe' : process.env.SHELL || 'bash';
+  const startTime = Date.now();
+  let exited = false;
   
   // Start a shell and run claude inside it
   const proc = pty.spawn(shell, ['-c', cliCmd], {
@@ -313,17 +614,63 @@ function startPTY(ws, data, projectPath) {
     env: { ...process.env, TERM: 'xterm-256color', FORCE_COLOR: '1' }
   });
 
+  // Create log stream for PTY session persistence
+  const logPath = path.join(PTY_LOG_DIR, `${sessionId}_${Date.now()}.log`);
+  const logStream = fs.createWriteStream(logPath, { flags: 'a' });
+
+  // PTY Stability: health check every 5s to detect unexpected exits
+  const healthCheck = setInterval(() => {
+    if (exited) { clearInterval(healthCheck); return; }
+    try {
+      process.kill(proc.pid, 0);
+    } catch (e) {
+      // Process is dead but onExit may not have fired
+      clearInterval(healthCheck);
+      if (!exited) {
+        exited = true;
+        if (logStream && !logStream.destroyed) logStream.end();
+        activeSessions.delete(sessionId);
+        ws.send(JSON.stringify({
+          type: 'pty_exit',
+          data: { code: -1, signal: 'HEALTH_CHECK', sessionId, error: true, message: 'PTY process disappeared unexpectedly', recommendChat: data.provider !== 'kimi' }
+        }));
+      }
+    }
+  }, 5000);
+
   proc.onData(chunk => {
+    if (logStream && !logStream.destroyed) logStream.write(chunk);
     ws.send(JSON.stringify({ type: 'pty_output', data: { text: chunk, sessionId } }));
   });
 
   proc.onExit(({ exitCode, signal }) => {
+    if (exited) return;
+    exited = true;
+    clearInterval(healthCheck);
+    const duration = Date.now() - startTime;
+    if (logStream && !logStream.destroyed) logStream.end();
     activeSessions.delete(sessionId);
-    ws.send(JSON.stringify({ type: 'pty_exit', data: { code: exitCode, signal, sessionId } }));
+    
+    // Retry logic: if PTY died within 3 seconds, show error and recommend Chat mode
+    if (duration < 3000 && exitCode !== 0) {
+      ws.send(JSON.stringify({
+        type: 'pty_exit',
+        data: {
+          code: exitCode,
+          signal,
+          sessionId,
+          error: true,
+          message: `${data.provider === 'kimi' ? 'Kimi' : 'Claude'} Interactive ปิดตัวเร็วเกินไป (${duration}ms)\nอาจมีปัญหากับ node-pty บนระบบของคุณ${data.provider !== 'kimi' ? '\n\nแนะนำ: ใช้ Chat Mode แทน (คลิกที่ Chat ด้านล่าง)' : ''}`,
+          recommendChat: data.provider !== 'kimi'
+        }
+      }));
+    } else {
+      ws.send(JSON.stringify({ type: 'pty_exit', data: { code: exitCode, signal, sessionId } }));
+    }
   });
 
-  activeSessions.set(sessionId, { process: proc, ws, isPTY: true });
-  ws.send(JSON.stringify({ type: 'pty_ready', data: { sessionId } }));
+  activeSessions.set(sessionId, { process: proc, ws, isPTY: true, logStream, logPath, startTime, healthCheck });
+  ws.send(JSON.stringify({ type: 'pty_ready', data: { sessionId, logPath } }));
 }
 
 function handlePTYInput(ws, data) {
@@ -419,6 +766,14 @@ function handleStop(ws, data) {
   const session = activeSessions.get(data.sessionId || 'default');
   if (session?.process) {
     session.process.kill();
+    if (session.logStream && !session.logStream.destroyed) {
+      session.logStream.end();
+      session.logStream = null;
+    }
+    if (session.healthCheck) {
+      clearInterval(session.healthCheck);
+      session.healthCheck = null;
+    }
     ws.send(JSON.stringify({ type: 'stopped', data: { sessionId: data.sessionId || 'default' } }));
   }
 }
@@ -437,6 +792,113 @@ function handleListSessions(ws, data) {
 function handleDeleteSession(ws, data) {
   deleteSession(data.sessionId);
   ws.send(JSON.stringify({ type: 'session_deleted', data: { sessionId: data.sessionId } }));
+}
+
+function handleSaveMessage(ws, data, projectPath) {
+  if (!data.sessionId || !data.content) return;
+  ensureSession(data.sessionId, projectPath);
+  saveMessage(data.sessionId, data.role || 'system', data.content);
+}
+
+function handleKimiAPIChat(ws, data, projectPath) {
+  const sessionId = data.sessionId || 'default';
+  const apiKey = data.apiKey;
+  const model = data.model || 'moonshot-v1-8k';
+  const message = data.message;
+  
+  if (!apiKey) {
+    return ws.send(JSON.stringify({ type: 'error', data: { message: 'Kimi API Key is required' } }));
+  }
+  
+  // Save user message
+  if (message && message.trim()) {
+    ensureSession(sessionId, projectPath);
+    saveMessage(sessionId, 'user', message.trim());
+    // Update title from first user message if still default
+    const existing = db.prepare('SELECT title FROM sessions WHERE id = ?').get(sessionId);
+    if (existing && existing.title === 'New Chat') {
+      updateSessionTitle(sessionId, message.trim().slice(0, 60));
+    }
+  }
+  
+  // Build messages from history
+  const rows = getHistory(sessionId, 50);
+  const messages = [];
+  messages.push({ role: 'system', content: 'You are Kimi, a helpful assistant.' });
+  for (const row of rows) {
+    if (row.role === 'user' || row.role === 'assistant') {
+      messages.push({ role: row.role, content: row.content });
+    }
+  }
+  
+  const requestData = JSON.stringify({
+    model: model,
+    messages: messages.slice(-20), // last 20 messages
+    stream: true
+  });
+  
+  const options = {
+    hostname: 'api.moonshot.ai',
+    path: '/v1/chat/completions',
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${apiKey}`
+    }
+  };
+  
+  console.log(`[KIMI API] Requesting model=${model} key_prefix=${apiKey.slice(0,8)}... sessionId=${sessionId}`);
+  
+  let buffer = '';
+  
+  const req = https.request(options, (res) => {
+    console.log(`[KIMI API] Response status=${res.statusCode}`);
+    if (res.statusCode !== 200) {
+      let errorBody = '';
+      res.on('data', chunk => { errorBody += chunk; });
+      res.on('end', () => {
+        console.log(`[KIMI API] Error body: ${errorBody}`);
+        ws.send(JSON.stringify({ type: 'error', data: { message: `Kimi API error ${res.statusCode}: ${errorBody}`, sessionId } }));
+      });
+      return;
+    }
+    
+    res.on('data', (chunk) => {
+      const text = chunk.toString();
+      const lines = text.split('\n');
+      for (const line of lines) {
+        if (!line.trim() || !line.startsWith('data: ')) continue;
+        const jsonStr = line.slice(6);
+        if (jsonStr === '[DONE]') continue;
+        try {
+          const parsed = JSON.parse(jsonStr);
+          const content = parsed.choices?.[0]?.delta?.content || '';
+          if (content) {
+            buffer += content;
+            ws.send(JSON.stringify({ type: 'kimi_stream', data: { text: content, sessionId } }));
+          }
+        } catch (e) {
+          // ignore parse errors
+        }
+      }
+    });
+    
+    res.on('end', () => {
+      saveMessage(sessionId, 'assistant', buffer);
+      ws.send(JSON.stringify({ type: 'kimi_complete', data: { output: buffer, code: 0, sessionId } }));
+    });
+    
+    res.on('error', (err) => {
+      ws.send(JSON.stringify({ type: 'error', data: { message: `Kimi API stream error: ${err.message}`, sessionId } }));
+    });
+  });
+  
+  req.on('error', (err) => {
+    ws.send(JSON.stringify({ type: 'error', data: { message: `Kimi API request error: ${err.message}`, sessionId } }));
+  });
+  
+  req.write(requestData);
+  req.end();
 }
 
 const PORT = process.env.PORT || 3003;
